@@ -1,0 +1,328 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AuthProvider {
+  CLERK
+  SUPABASE
+  CUSTOM
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+  DELETED
+}
+
+enum Theme {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+enum AccountType {
+  CASH
+  BANK
+  MOBILE_MONEY
+  CARD
+  OTHER
+}
+
+enum RecordStatus {
+  ACTIVE
+  CANCELLED
+  ARCHIVED
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+  BOTH
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+enum TransactionSourceType {
+  MANUAL
+  BILL_PAYMENT
+  SAVINGS_CONTRIBUTION
+  DEBT_PAYMENT
+  BUDGET_ADJUSTMENT
+  AYUUTO_CONTRIBUTION
+  AYUUTO_PAYOUT
+}
+
+enum RepeatType {
+  NONE
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum BudgetPeriod {
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum SavingsGoalStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  CANCELLED
+  ARCHIVED
+}
+
+enum DebtStatus {
+  ACTIVE
+  PAID_OFF
+  CANCELLED
+  ARCHIVED
+}
+
+model AppUser {
+  id                 String     @id @default(uuid()) @db.Uuid
+  authProvider       AuthProvider @default(CLERK) @map("auth_provider")
+  authProviderUserId String     @unique @map("auth_provider_user_id")
+  email              String     @unique
+  status             UserStatus @default(ACTIVE)
+  createdAt          DateTime   @default(now()) @map("created_at")
+  updatedAt          DateTime   @updatedAt @map("updated_at")
+
+  profile       Profile?
+  preferences   UserPreference?
+  accounts      Account[]
+  categories    Category[]
+  transactions  Transaction[]
+  budgets       Budget[]
+  bills         Bill[]
+  savingsGoals  SavingsGoal[]
+  debts         Debt[]
+  auditLogs     AuditLog[]
+
+  @@map("app_users")
+}
+
+model Profile {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @map("user_id") @db.Uuid
+  fullName  String   @map("full_name")
+  avatarUrl String?  @map("avatar_url")
+  country   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user AppUser @relation(fields: [userId], references: [id])
+
+  @@map("profiles")
+}
+
+model UserPreference {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @unique @map("user_id") @db.Uuid
+  defaultCurrency String   @default("USD") @map("default_currency") @db.VarChar(3)
+  language        String   @default("en") @db.VarChar(10)
+  theme           Theme    @default(SYSTEM)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user AppUser @relation(fields: [userId], references: [id])
+
+  @@map("user_preferences")
+}
+
+model Account {
+  id                  String       @id @default(uuid()) @db.Uuid
+  userId              String       @map("user_id") @db.Uuid
+  name                String
+  type                AccountType
+  provider            String?
+  currency            String       @db.VarChar(3)
+  openingBalanceMinor BigInt       @default(0) @map("opening_balance_minor")
+  currentBalanceMinor BigInt       @default(0) @map("current_balance_minor")
+  isDefault           Boolean      @default(false) @map("is_default")
+  status              RecordStatus @default(ACTIVE)
+  createdAt           DateTime     @default(now()) @map("created_at")
+  updatedAt           DateTime     @updatedAt @map("updated_at")
+
+  user         AppUser       @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+
+  @@index([userId])
+  @@index([userId, status])
+  @@map("accounts")
+}
+
+model Category {
+  id        String       @id @default(uuid()) @db.Uuid
+  userId    String?      @map("user_id") @db.Uuid
+  name      String
+  type      CategoryType
+  icon      String?
+  color     String?
+  isDefault Boolean      @default(false) @map("is_default")
+  status    RecordStatus @default(ACTIVE)
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  user         AppUser?      @relation(fields: [userId], references: [id])
+  transactions Transaction[]
+  budgets      Budget[]
+  bills        Bill[]
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@map("categories")
+}
+
+model Transaction {
+  id              String                @id @default(uuid()) @db.Uuid
+  userId          String                @map("user_id") @db.Uuid
+  accountId       String                @map("account_id") @db.Uuid
+  categoryId      String                @map("category_id") @db.Uuid
+  type            TransactionType
+  amountMinor     BigInt                @map("amount_minor")
+  currency        String                @db.VarChar(3)
+  transactionDate DateTime              @default(now()) @map("transaction_date")
+  description     String
+  note            String?
+  paymentMethod   String?               @map("payment_method")
+  sourceType      TransactionSourceType @default(MANUAL) @map("source_type")
+  sourceId        String?               @map("source_id") @db.Uuid
+  status          RecordStatus          @default(ACTIVE)
+  createdAt       DateTime              @default(now()) @map("created_at")
+  updatedAt       DateTime              @updatedAt @map("updated_at")
+
+  user     AppUser  @relation(fields: [userId], references: [id])
+  account  Account  @relation(fields: [accountId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@index([userId])
+  @@index([accountId])
+  @@index([categoryId])
+  @@index([transactionDate])
+  @@index([userId, type])
+  @@index([userId, status])
+  @@index([sourceType, sourceId])
+  @@map("transactions")
+}
+
+model Budget {
+  id                    String       @id @default(uuid()) @db.Uuid
+  userId                String       @map("user_id") @db.Uuid
+  categoryId            String?      @map("category_id") @db.Uuid
+  name                  String
+  period                BudgetPeriod
+  month                 Int?
+  year                  Int
+  limitAmountMinor      BigInt       @map("limit_amount_minor")
+  currency              String       @db.VarChar(3)
+  alertThresholdPercent Int          @default(80) @map("alert_threshold_percent")
+  status                RecordStatus @default(ACTIVE)
+  createdAt             DateTime     @default(now()) @map("created_at")
+  updatedAt             DateTime     @updatedAt @map("updated_at")
+
+  user     AppUser   @relation(fields: [userId], references: [id])
+  category Category? @relation(fields: [categoryId], references: [id])
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([year, month])
+  @@index([userId, status])
+  @@map("budgets")
+}
+
+model Bill {
+  id                 String       @id @default(uuid()) @db.Uuid
+  userId             String       @map("user_id") @db.Uuid
+  categoryId         String       @map("category_id") @db.Uuid
+  name               String
+  amountMinor        BigInt       @map("amount_minor")
+  currency           String       @db.VarChar(3)
+  dueDate            DateTime     @map("due_date") @db.Date
+  repeatType         RepeatType   @default(NONE) @map("repeat_type")
+  reminderDaysBefore Int?         @map("reminder_days_before")
+  status             RecordStatus @default(ACTIVE)
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+
+  user     AppUser  @relation(fields: [userId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([dueDate])
+  @@index([userId, status])
+  @@map("bills")
+}
+
+model SavingsGoal {
+  id                 String            @id @default(uuid()) @db.Uuid
+  userId             String            @map("user_id") @db.Uuid
+  name               String
+  targetAmountMinor  BigInt            @map("target_amount_minor")
+  currentAmountMinor BigInt            @default(0) @map("current_amount_minor")
+  currency           String            @db.VarChar(3)
+  deadline           DateTime?         @db.Date
+  note               String?
+  status             SavingsGoalStatus @default(ACTIVE)
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+
+  user AppUser @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([deadline])
+  @@map("savings_goals")
+}
+
+model Debt {
+  id                  String     @id @default(uuid()) @db.Uuid
+  userId              String     @map("user_id") @db.Uuid
+  name                String
+  lenderName          String?    @map("lender_name")
+  originalAmountMinor BigInt     @map("original_amount_minor")
+  remainingAmountMinor BigInt    @map("remaining_amount_minor")
+  currency            String     @db.VarChar(3)
+  dueDate             DateTime?  @map("due_date") @db.Date
+  minimumPaymentMinor BigInt?    @map("minimum_payment_minor")
+  note                String?
+  status              DebtStatus @default(ACTIVE)
+  createdAt           DateTime   @default(now()) @map("created_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
+
+  user AppUser @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("debts")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id") @db.Uuid
+  oldValues  Json?    @map("old_values")
+  newValues  Json?    @map("new_values")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user AppUser @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
