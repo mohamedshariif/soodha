@@ -72,6 +72,7 @@ enum BudgetPeriod {
   WEEKLY
   MONTHLY
   YEARLY
+  CUSTOM
 }
 
 enum SavingsGoalStatus {
@@ -90,24 +91,28 @@ enum DebtStatus {
 }
 
 model AppUser {
-  id                 String     @id @default(uuid()) @db.Uuid
+  id                 String       @id @default(uuid()) @db.Uuid
   authProvider       AuthProvider @default(CLERK) @map("auth_provider")
-  authProviderUserId String     @unique @map("auth_provider_user_id")
-  email              String     @unique
-  status             UserStatus @default(ACTIVE)
-  createdAt          DateTime   @default(now()) @map("created_at")
-  updatedAt          DateTime   @updatedAt @map("updated_at")
+  authProviderUserId String       @unique @map("auth_provider_user_id")
+  email              String       @unique
+  status             UserStatus   @default(ACTIVE)
+  deletedAt          DateTime?    @map("deleted_at")
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
 
-  profile       Profile?
-  preferences   UserPreference?
-  accounts      Account[]
-  categories    Category[]
-  transactions  Transaction[]
-  budgets       Budget[]
-  bills         Bill[]
-  savingsGoals  SavingsGoal[]
-  debts         Debt[]
-  auditLogs     AuditLog[]
+  profile              Profile?
+  preferences          UserPreference?
+  accounts             Account[]
+  categories           Category[]
+  transactions         Transaction[]
+  budgets              Budget[]
+  bills                Bill[]
+  billPayments         BillPayment[]
+  savingsGoals         SavingsGoal[]
+  savingsContributions SavingsContribution[]
+  debts                Debt[]
+  debtPayments         DebtPayment[]
+  auditLogs            AuditLog[]
 
   @@map("app_users")
 }
@@ -151,6 +156,7 @@ model Account {
   currentBalanceMinor BigInt       @default(0) @map("current_balance_minor")
   isDefault           Boolean      @default(false) @map("is_default")
   status              RecordStatus @default(ACTIVE)
+  deletedAt           DateTime?    @map("deleted_at")
   createdAt           DateTime     @default(now()) @map("created_at")
   updatedAt           DateTime     @updatedAt @map("updated_at")
 
@@ -159,29 +165,33 @@ model Account {
 
   @@index([userId])
   @@index([userId, status])
+  @@index([userId, isDefault])
+  @@index([userId, deletedAt])
   @@map("accounts")
 }
 
 model Category {
   id        String       @id @default(uuid()) @db.Uuid
-  userId    String?      @map("user_id") @db.Uuid
+  userId    String       @map("user_id") @db.Uuid
   name      String
   type      CategoryType
   icon      String?
   color     String?
   isDefault Boolean      @default(false) @map("is_default")
   status    RecordStatus @default(ACTIVE)
+  deletedAt DateTime?    @map("deleted_at")
   createdAt DateTime     @default(now()) @map("created_at")
   updatedAt DateTime     @updatedAt @map("updated_at")
 
-  user         AppUser?      @relation(fields: [userId], references: [id])
+  user         AppUser       @relation(fields: [userId], references: [id])
   transactions Transaction[]
   budgets      Budget[]
   bills        Bill[]
 
   @@index([userId])
-  @@index([type])
-  @@index([status])
+  @@index([userId, type])
+  @@index([userId, status])
+  @@index([userId, deletedAt])
   @@map("categories")
 }
 
@@ -189,7 +199,7 @@ model Transaction {
   id              String                @id @default(uuid()) @db.Uuid
   userId          String                @map("user_id") @db.Uuid
   accountId       String                @map("account_id") @db.Uuid
-  categoryId      String                @map("category_id") @db.Uuid
+  categoryId      String?               @map("category_id") @db.Uuid
   type            TransactionType
   amountMinor     BigInt                @map("amount_minor")
   currency        String                @db.VarChar(3)
@@ -200,19 +210,25 @@ model Transaction {
   sourceType      TransactionSourceType @default(MANUAL) @map("source_type")
   sourceId        String?               @map("source_id") @db.Uuid
   status          RecordStatus          @default(ACTIVE)
+  deletedAt       DateTime?             @map("deleted_at")
   createdAt       DateTime              @default(now()) @map("created_at")
   updatedAt       DateTime              @updatedAt @map("updated_at")
 
-  user     AppUser  @relation(fields: [userId], references: [id])
-  account  Account  @relation(fields: [accountId], references: [id])
-  category Category @relation(fields: [categoryId], references: [id])
+  user                AppUser              @relation(fields: [userId], references: [id])
+  account             Account              @relation(fields: [accountId], references: [id])
+  category            Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  billPayment         BillPayment?
+  savingsContribution SavingsContribution?
+  debtPayment         DebtPayment?
 
   @@index([userId])
   @@index([accountId])
   @@index([categoryId])
   @@index([transactionDate])
-  @@index([userId, type])
+  @@index([userId, transactionDate])
+  @@index([userId, type, transactionDate])
   @@index([userId, status])
+  @@index([userId, deletedAt])
   @@index([sourceType, sourceId])
   @@map("transactions")
 }
@@ -222,48 +238,77 @@ model Budget {
   userId                String       @map("user_id") @db.Uuid
   categoryId            String?      @map("category_id") @db.Uuid
   name                  String
-  period                BudgetPeriod
-  month                 Int?
-  year                  Int
+  period                BudgetPeriod @default(MONTHLY)
+  periodStart           DateTime     @map("period_start") @db.Date
+  periodEnd             DateTime     @map("period_end") @db.Date
   limitAmountMinor      BigInt       @map("limit_amount_minor")
   currency              String       @db.VarChar(3)
   alertThresholdPercent Int          @default(80) @map("alert_threshold_percent")
   status                RecordStatus @default(ACTIVE)
+  deletedAt             DateTime?    @map("deleted_at")
   createdAt             DateTime     @default(now()) @map("created_at")
   updatedAt             DateTime     @updatedAt @map("updated_at")
 
   user     AppUser   @relation(fields: [userId], references: [id])
-  category Category? @relation(fields: [categoryId], references: [id])
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([categoryId])
-  @@index([year, month])
+  @@index([periodStart, periodEnd])
   @@index([userId, status])
+  @@index([userId, deletedAt])
   @@map("budgets")
 }
 
 model Bill {
   id                 String       @id @default(uuid()) @db.Uuid
   userId             String       @map("user_id") @db.Uuid
-  categoryId         String       @map("category_id") @db.Uuid
+  categoryId         String?      @map("category_id") @db.Uuid
   name               String
   amountMinor        BigInt       @map("amount_minor")
   currency           String       @db.VarChar(3)
-  dueDate            DateTime     @map("due_date") @db.Date
+  nextDueDate        DateTime     @map("next_due_date") @db.Date
   repeatType         RepeatType   @default(NONE) @map("repeat_type")
   reminderDaysBefore Int?         @map("reminder_days_before")
   status             RecordStatus @default(ACTIVE)
+  deletedAt          DateTime?    @map("deleted_at")
   createdAt          DateTime     @default(now()) @map("created_at")
   updatedAt          DateTime     @updatedAt @map("updated_at")
 
-  user     AppUser  @relation(fields: [userId], references: [id])
-  category Category @relation(fields: [categoryId], references: [id])
+  user     AppUser       @relation(fields: [userId], references: [id])
+  category Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  payments BillPayment[]
 
   @@index([userId])
   @@index([categoryId])
-  @@index([dueDate])
+  @@index([nextDueDate])
   @@index([userId, status])
+  @@index([userId, deletedAt])
   @@map("bills")
+}
+
+model BillPayment {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  billId        String   @map("bill_id") @db.Uuid
+  transactionId String   @unique @map("transaction_id") @db.Uuid
+  dueDate       DateTime @map("due_date") @db.Date
+  paidAt        DateTime @default(now()) @map("paid_at")
+  amountMinor   BigInt   @map("amount_minor")
+  currency      String   @db.VarChar(3)
+  note          String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user        AppUser     @relation(fields: [userId], references: [id])
+  bill        Bill        @relation(fields: [billId], references: [id])
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+
+  @@index([userId])
+  @@index([billId])
+  @@index([dueDate])
+  @@index([paidAt])
+  @@map("bill_payments")
 }
 
 model SavingsGoal {
@@ -276,38 +321,88 @@ model SavingsGoal {
   deadline           DateTime?         @db.Date
   note               String?
   status             SavingsGoalStatus @default(ACTIVE)
+  deletedAt          DateTime?         @map("deleted_at")
   createdAt          DateTime          @default(now()) @map("created_at")
   updatedAt          DateTime          @updatedAt @map("updated_at")
 
-  user AppUser @relation(fields: [userId], references: [id])
+  user          AppUser               @relation(fields: [userId], references: [id])
+  contributions SavingsContribution[]
 
   @@index([userId])
   @@index([status])
   @@index([deadline])
+  @@index([userId, deletedAt])
   @@map("savings_goals")
 }
 
-model Debt {
-  id                  String     @id @default(uuid()) @db.Uuid
-  userId              String     @map("user_id") @db.Uuid
-  name                String
-  lenderName          String?    @map("lender_name")
-  originalAmountMinor BigInt     @map("original_amount_minor")
-  remainingAmountMinor BigInt    @map("remaining_amount_minor")
-  currency            String     @db.VarChar(3)
-  dueDate             DateTime?  @map("due_date") @db.Date
-  minimumPaymentMinor BigInt?    @map("minimum_payment_minor")
-  note                String?
-  status              DebtStatus @default(ACTIVE)
-  createdAt           DateTime   @default(now()) @map("created_at")
-  updatedAt           DateTime   @updatedAt @map("updated_at")
+model SavingsContribution {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @map("user_id") @db.Uuid
+  savingsGoalId    String   @map("savings_goal_id") @db.Uuid
+  transactionId    String   @unique @map("transaction_id") @db.Uuid
+  amountMinor      BigInt   @map("amount_minor")
+  currency         String   @db.VarChar(3)
+  contributionDate DateTime @default(now()) @map("contribution_date")
+  note             String?
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
-  user AppUser @relation(fields: [userId], references: [id])
+  user        AppUser     @relation(fields: [userId], references: [id])
+  savingsGoal SavingsGoal @relation(fields: [savingsGoalId], references: [id])
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+
+  @@index([userId])
+  @@index([savingsGoalId])
+  @@index([contributionDate])
+  @@map("savings_contributions")
+}
+
+model Debt {
+  id                   String     @id @default(uuid()) @db.Uuid
+  userId               String     @map("user_id") @db.Uuid
+  name                 String
+  lenderName           String?    @map("lender_name")
+  originalAmountMinor  BigInt     @map("original_amount_minor")
+  remainingAmountMinor BigInt     @map("remaining_amount_minor")
+  currency             String     @db.VarChar(3)
+  dueDate              DateTime?  @map("due_date") @db.Date
+  minimumPaymentMinor  BigInt?    @map("minimum_payment_minor")
+  note                 String?
+  status               DebtStatus @default(ACTIVE)
+  deletedAt            DateTime?  @map("deleted_at")
+  createdAt            DateTime   @default(now()) @map("created_at")
+  updatedAt            DateTime   @updatedAt @map("updated_at")
+
+  user     AppUser       @relation(fields: [userId], references: [id])
+  payments DebtPayment[]
 
   @@index([userId])
   @@index([status])
   @@index([dueDate])
+  @@index([userId, deletedAt])
   @@map("debts")
+}
+
+model DebtPayment {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  debtId        String   @map("debt_id") @db.Uuid
+  transactionId String   @unique @map("transaction_id") @db.Uuid
+  amountMinor   BigInt   @map("amount_minor")
+  currency      String   @db.VarChar(3)
+  paidAt        DateTime @default(now()) @map("paid_at")
+  note          String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user        AppUser     @relation(fields: [userId], references: [id])
+  debt        Debt        @relation(fields: [debtId], references: [id])
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+
+  @@index([userId])
+  @@index([debtId])
+  @@index([paidAt])
+  @@map("debt_payments")
 }
 
 model AuditLog {
