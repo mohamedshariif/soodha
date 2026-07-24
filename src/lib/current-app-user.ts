@@ -1,5 +1,6 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { ensureDefaultCategories } from "@/lib/default-categories";
 
 export async function getCurrentAppUser() {
   const { userId } = await auth();
@@ -64,6 +65,8 @@ export async function getCurrentAppUser() {
       accounts: true,
     },
   });
+
+  await ensureDefaultCategories(appUser.id);
 
   return appUser;
 }
