@@ -188,11 +188,11 @@ model Category {
   budgets      Budget[]
   bills        Bill[]
 
-  @@unique([userId, name, type])
   @@index([userId])
   @@index([userId, type])
   @@index([userId, status])
   @@index([userId, deletedAt])
+  @@unique([userId, name, type])
   @@map("categories")
 }
 

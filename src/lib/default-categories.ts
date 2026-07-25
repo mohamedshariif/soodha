@@ -15,12 +15,6 @@ const defaultCategories = [
     color: "#22C55E",
   },
   {
-    name: "Gift",
-    type: "INCOME",
-    icon: "gift",
-    color: "#84CC16",
-  },
-  {
     name: "Other Income",
     type: "INCOME",
     icon: "plus-circle",
@@ -35,40 +29,10 @@ const defaultCategories = [
     color: "#EF4444",
   },
   {
-    name: "Rent",
-    type: "EXPENSE",
-    icon: "home",
-    color: "#F97316",
-  },
-  {
-    name: "Transport",
-    type: "EXPENSE",
-    icon: "car",
-    color: "#EAB308",
-  },
-  {
     name: "Bills",
     type: "EXPENSE",
     icon: "receipt",
     color: "#8B5CF6",
-  },
-  {
-    name: "Health",
-    type: "EXPENSE",
-    icon: "heart-pulse",
-    color: "#EC4899",
-  },
-  {
-    name: "Shopping",
-    type: "EXPENSE",
-    icon: "shopping-bag",
-    color: "#6366F1",
-  },
-  {
-    name: "Education",
-    type: "EXPENSE",
-    icon: "graduation-cap",
-    color: "#0EA5E9",
   },
   {
     name: "Other Expense",
