@@ -1,6 +1,8 @@
 import { createExpense } from "./actions";
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
+import { formatDateForDisplay } from "@/lib/date";
+import { getTodayDateInputValue } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +37,7 @@ export default async function ExpensesPage() {
     take: 5,
   });
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTodayDateInputValue();
 
   return (
     <div>
@@ -141,7 +143,7 @@ export default async function ExpensesPage() {
                   </p>
                   <p className="text-xs text-slate-500">
                     {transaction.category?.name} ·{" "}
-                    {transaction.transactionDate.toDateString()}
+                    {formatDateForDisplay(transaction.transactionDate)}
                   </p>
                 </div>
 

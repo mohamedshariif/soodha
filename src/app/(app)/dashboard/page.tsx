@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
+import { formatDateForDisplay } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -160,7 +161,7 @@ export default async function DashboardPage() {
                     <p className="mt-1 text-xs text-slate-500">
                       {transaction.category?.name ?? "No category"} ·{" "}
                       {transaction.account.name} ·{" "}
-                      {transaction.transactionDate.toDateString()}
+                      {formatDateForDisplay(transaction.transactionDate)}
                     </p>
                   </div>
 

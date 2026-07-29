@@ -30,3 +30,15 @@ export function formatMoneyFromMinorUnits(
     currency,
   }).format(Number(amountMinor) / 100);
 }
+
+export function formatMinorUnitsForInput(amountMinor: bigint) {
+  const isNegative = amountMinor < 0n;
+  const value = isNegative ? -amountMinor : amountMinor;
+
+  const whole = value / 100n;
+  const cents = value % 100n;
+
+  return `${isNegative ? "-" : ""}${whole.toString()}.${cents
+    .toString()
+    .padStart(2, "0")}`;
+}

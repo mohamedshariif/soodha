@@ -1,65 +1,106 @@
-import { createIncome } from "./actions";
+import Link from "next/link";
+import { notFound } from "next/navigation";
 import { getCurrentAppUser } from "@/lib/current-app-user";
-import { formatMoneyFromMinorUnits } from "@/lib/money";
-import { formatDateForDisplay } from "@/lib/date";
-import { getTodayDateInputValue } from "@/lib/date";
+import { formatMinorUnitsForInput } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
+import { updateTransaction } from "../../actions";
+import { formatDateForInput } from "@/lib/date";
 
 export const dynamic = "force-dynamic";
 
-export default async function IncomePage() {
+export default async function EditTransactionPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
   const appUser = await getCurrentAppUser();
 
-  const incomeCategories = await prisma.category.findMany({
+  if (!appUser) {
+    throw new Error("You must be signed in.");
+  }
+
+  const transaction = await prisma.transaction.findFirst({
     where: {
-      userId: appUser?.id,
-      type: "INCOME",
+      id,
+      userId: appUser.id,
+      status: "ACTIVE",
+      deletedAt: null,
+      sourceType: "MANUAL",
+    },
+    include: {
+      category: true,
+      account: true,
+    },
+  });
+
+  if (!transaction) {
+    notFound();
+  }
+
+  const categories = await prisma.category.findMany({
+    where: {
+      userId: appUser.id,
+      type: transaction.type === "INCOME" ? "INCOME" : "EXPENSE",
       status: "ACTIVE",
       deletedAt: null,
     },
     orderBy: [{ isDefault: "desc" }, { name: "asc" }],
   });
 
-  const recentIncome = await prisma.transaction.findMany({
-    where: {
-      userId: appUser?.id,
-      type: "INCOME",
-      status: "ACTIVE",
-      deletedAt: null,
-    },
-    include: {
-      category: true,
-      account: true,
-    },
-    orderBy: {
-      transactionDate: "desc",
-    },
-    take: 5,
-  });
+  const transactionDateValue = formatDateForInput(transaction.transactionDate);
 
-  const today = getTodayDateInputValue();
+  const isIncome = transaction.type === "INCOME";
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900">Income</h1>
-      <p className="mt-2 text-slate-600">
-        Add and track money coming into your account.
-      </p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Edit transaction
+          </h1>
+          <p className="mt-2 text-slate-600">
+            Update this {isIncome ? "income" : "expense"} transaction safely.
+          </p>
+        </div>
+
+        <Link
+          href="/transactions"
+          className="text-sm font-medium text-emerald-600 hover:text-emerald-700"
+        >
+          Back to transactions
+        </Link>
+      </div>
 
       <form
-        action={createIncome}
+        action={updateTransaction}
         className="mt-6 rounded-xl border border-slate-200 bg-white p-5"
       >
-        <h2 className="font-semibold text-slate-900">Add income</h2>
+        <input type="hidden" name="transactionId" value={transaction.id} />
 
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <div className="mb-4 rounded-lg bg-slate-50 p-4">
+          <p className="text-sm text-slate-500">Transaction type</p>
+          <p
+            className={`mt-1 font-semibold ${
+              isIncome ? "text-emerald-600" : "text-red-600"
+            }`}
+          >
+            {transaction.type}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            Type is locked for now. To change income to expense, delete this
+            transaction and create a new one.
+          </p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
           <div>
             <label className="text-sm font-medium text-slate-700">
               Amount
             </label>
             <input
               name="amount"
-              placeholder="100.00"
+              defaultValue={formatMinorUnitsForInput(transaction.amountMinor)}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
               required
             />
@@ -71,11 +112,12 @@ export default async function IncomePage() {
             </label>
             <select
               name="categoryId"
+              defaultValue={transaction.categoryId ?? ""}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
               required
             >
               <option value="">Select category</option>
-              {incomeCategories.map((category) => (
+              {categories.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
                 </option>
@@ -90,7 +132,7 @@ export default async function IncomePage() {
             <input
               type="date"
               name="transactionDate"
-              defaultValue={today}
+              defaultValue={transactionDateValue}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
             />
           </div>
@@ -101,7 +143,7 @@ export default async function IncomePage() {
             </label>
             <input
               name="description"
-              placeholder="e.g. July salary"
+              defaultValue={transaction.description}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
               required
             />
@@ -113,7 +155,7 @@ export default async function IncomePage() {
             </label>
             <textarea
               name="note"
-              placeholder="Optional note"
+              defaultValue={transaction.note ?? ""}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
               rows={3}
             />
@@ -121,43 +163,9 @@ export default async function IncomePage() {
         </div>
 
         <button className="mt-4 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
-          Save income
+          Save changes
         </button>
       </form>
-
-      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="font-semibold text-slate-900">Recent income</h2>
-
-        <div className="mt-4 space-y-2">
-          {recentIncome.length === 0 ? (
-            <p className="text-sm text-slate-500">No income added yet.</p>
-          ) : (
-            recentIncome.map((transaction) => (
-              <div
-                key={transaction.id}
-                className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
-              >
-                <div>
-                  <p className="text-sm font-medium text-slate-900">
-                    {transaction.description}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {transaction.category?.name} ·{" "}
-                    {formatDateForDisplay(transaction.transactionDate)}
-                  </p>
-                </div>
-
-                <p className="text-sm font-semibold text-emerald-600">
-                  {formatMoneyFromMinorUnits(
-                    transaction.amountMinor,
-                    transaction.currency
-                  )}
-                </p>
-              </div>
-            ))
-          )}
-        </div>
-      </section>
     </div>
   );
 }

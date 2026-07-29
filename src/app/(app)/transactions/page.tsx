@@ -3,6 +3,7 @@ import { getCurrentAppUser } from "@/lib/current-app-user";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 import { cancelTransaction } from "./actions";
+import { formatDateForDisplay } from "@/lib/date";
 
 export const dynamic = "force-dynamic";
 
@@ -96,32 +97,39 @@ export default async function TransactionsPage() {
                     <p className="mt-1 text-xs text-slate-500">
                       {transaction.category?.name ?? "No category"} ·{" "}
                       {transaction.account.name} ·{" "}
-                      {transaction.transactionDate.toDateString()}
+                      {formatDateForDisplay(transaction.transactionDate)}
                     </p>
                   </div>
 
                   <div className="text-right">
-  <p
-    className={`text-sm font-semibold ${
-      isIncome ? "text-emerald-600" : "text-red-600"
-    }`}
-  >
-    {isIncome ? "+" : "-"}
-    {formatMoneyFromMinorUnits(
-      transaction.amountMinor,
-      transaction.currency
-    )}
-  </p>
+                    <p
+                      className={`text-sm font-semibold ${
+                        isIncome ? "text-emerald-600" : "text-red-600"
+                      }`}
+                    >
+                      {isIncome ? "+" : "-"}
+                      {formatMoneyFromMinorUnits(
+                        transaction.amountMinor,
+                        transaction.currency
+                      )}
+                    </p>
 
-  <p className="mt-1 text-xs text-slate-500">{transaction.type}</p>
+                    <p className="mt-1 text-xs text-slate-500">{transaction.type}</p>
 
-  <form action={cancelTransaction} className="mt-2">
-    <input type="hidden" name="transactionId" value={transaction.id} />
-    <button className="text-xs font-medium text-red-600 hover:text-red-700">
-      Delete
-    </button>
-  </form>
-</div>
+                    <Link
+                      href={`/transactions/${transaction.id}/edit`}
+                      className="text-xs font-medium text-emerald-600 hover:text-emerald-700"
+                    >
+                      Edit
+                    </Link>
+
+                    <form action={cancelTransaction} className="mt-2">
+                      <input type="hidden" name="transactionId" value={transaction.id} />
+                      <button className="text-xs font-medium text-red-600 hover:text-red-700">
+                        Delete
+                      </button>
+                    </form>
+                  </div>
                 </div>
               );
             })

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { parseAmountToMinorUnits } from "@/lib/money";
+import { parseDateInputToTransactionDate } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 
 export async function createIncome(formData: FormData) {
@@ -59,9 +60,7 @@ export async function createIncome(formData: FormData) {
     throw new Error("Income category not found.");
   }
 
-  const transactionDate = transactionDateValue
-    ? new Date(`${transactionDateValue}T00:00:00`)
-    : new Date();
+  const transactionDate = parseDateInputToTransactionDate(transactionDateValue);
 
   await prisma.$transaction(async (tx) => {
     await tx.transaction.create({
