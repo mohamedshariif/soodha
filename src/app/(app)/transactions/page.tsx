@@ -1,29 +1,127 @@
 import Link from "next/link";
 import { getCurrentAppUser } from "@/lib/current-app-user";
-import { formatMoneyFromMinorUnits } from "@/lib/money";
-import { prisma } from "@/lib/prisma";
 import { cancelTransaction } from "./actions";
-import { formatDateForDisplay } from "@/lib/date";
+import { formatMoneyFromMinorUnits } from "@/lib/money";
+import { formatDateForDisplay, parseDateInputToTransactionDate } from "@/lib/date";
+import { TransactionsFilterForm } from "./transactions-filter-form";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export default async function TransactionsPage() {
+type TransactionSearchParams = {
+  type?: string;
+  categortId?: string;
+  search?: string;
+  from?: string;
+  to?: string;
+};
+
+function isTransactionType(value?: string) {
+  return value === "INCOME" || value === "EXPENSE";
+}
+
+function isDateInput(value?: string) {
+  return Boolean(value && /^\d{4}-\d{2}-\d{2}$/.test(value));
+}
+
+export default async function TransactionsPage({
+  searchParams,
+}: {
+  searchParams:Promise<TransactionsSearchParams>;
+}) {
   const appUser = await getCurrentAppUser();
 
-  const account = await prisma.account.findFirst({
-    where: {
-      userId: appUser?.id,
-      isDefault: true,
-      status: "ACTIVE",
-      deletedAt: null,
-    },
-  });
+  if (!appUser) {
+    throw new Error("You must be signed in.");
+  }
+
+  const filters = await searchParams;
+
+  const type = isTransactionType(filters.type) ? filters.type : "";
+  const search = filters.search?.trim() ?? "";
+  const from = isDateInput(filters.from) ? filters.from : "";
+  const to = isDateInput(filters.to) ? filters.to : "";
+  const selectedCategoryId = filters.categoryId?.trim() ?? "";
+
+  const [account, categories] = await Promise.all([
+    prisma.account.findFirst({
+      where: {
+        userId: appUser.id,
+        isDefault: true,
+        status: "ACTIVE",
+        deletedAt: null,
+      },
+    }),
+
+    prisma.category.findMany({
+      where: {
+        userId: appUser.id,
+        status: "ACTIVE",
+        deletedAt: null,
+      },
+      orderBy: [{ type: "asc" }, { isDefault: "desc" }, { name: "asc" }],
+    }),
+  ]);
+
+  const validCategoryId = categories.some(
+    (category) => category.id === selectedCategoryId
+  )
+    ? selectedCategoryId
+    : "";
+
+  const dateFilter: {
+    gte?: Date;
+    lt?: Date;
+  } = {};
+
+  if (from) {
+    dateFilter.gte = parseDateInputToTransactionDate(from);
+  }
+
+  if (to) {
+    const toDateExclusive = parseDateInputToTransactionDate(to);
+    toDateExclusive.setUTCDate(toDateExclusive.getUTCDate() + 1);
+    dateFilter.lt = toDateExclusive;
+  }
 
   const transactions = await prisma.transaction.findMany({
     where: {
-      userId: appUser?.id,
+      userId: appUser.id,
       status: "ACTIVE",
       deletedAt: null,
+
+      ...(type ? { type } : {}),
+
+      ...(validCategoryId
+        ? {
+            categoryId: validCategoryId,
+          }
+        : {}),
+
+      ...(search
+        ? {
+            OR: [
+              {
+                description: {
+                  contains: search,
+                  mode: "insensitive" as const,
+                },
+              },
+              {
+                note: {
+                  contains: search,
+                  mode: "insensitive" as const,
+                },
+              },
+            ],
+          }
+        : {}),
+
+      ...(from || to
+        ? {
+            transactionDate: dateFilter,
+          }
+        : {}),
     },
     include: {
       category: true,
@@ -32,7 +130,7 @@ export default async function TransactionsPage() {
     orderBy: {
       transactionDate: "desc",
     },
-    take: 20,
+    take: 50,
   });
 
   return (
@@ -41,7 +139,7 @@ export default async function TransactionsPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Transactions</h1>
           <p className="mt-2 text-slate-600">
-            View all income and expenses in one place.
+            View, filter, edit, and manage your money records.
           </p>
         </div>
 
@@ -74,12 +172,31 @@ export default async function TransactionsPage() {
         </p>
       </section>
 
+      <TransactionsFilterForm
+        categories={categories}
+        filters={{
+          search,
+          type,
+          categoryId: validCategoryId,
+          from,
+          to,
+        }}
+      />
+
       <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
-        <h2 className="font-semibold text-slate-900">Recent transactions</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-slate-900">Transaction results</h2>
+          <p className="text-sm text-slate-500">
+            Showing {transactions.length} record
+            {transactions.length === 1 ? "" : "s"}
+          </p>
+        </div>
 
         <div className="mt-4 space-y-2">
           {transactions.length === 0 ? (
-            <p className="text-sm text-slate-500">No transactions yet.</p>
+            <p className="text-sm text-slate-500">
+              No transactions match your filters.
+            </p>
           ) : (
             transactions.map((transaction) => {
               const isIncome = transaction.type === "INCOME";
@@ -87,7 +204,7 @@ export default async function TransactionsPage() {
               return (
                 <div
                   key={transaction.id}
-                  className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-3"
+                  className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 px-3 py-3"
                 >
                   <div>
                     <p className="text-sm font-medium text-slate-900">
@@ -99,6 +216,12 @@ export default async function TransactionsPage() {
                       {transaction.account.name} ·{" "}
                       {formatDateForDisplay(transaction.transactionDate)}
                     </p>
+
+                    {transaction.note && (
+                      <p className="mt-1 text-xs text-slate-500">
+                        {transaction.note}
+                      </p>
+                    )}
                   </div>
 
                   <div className="text-right">
@@ -114,21 +237,29 @@ export default async function TransactionsPage() {
                       )}
                     </p>
 
-                    <p className="mt-1 text-xs text-slate-500">{transaction.type}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {transaction.type}
+                    </p>
 
-                    <Link
-                      href={`/transactions/${transaction.id}/edit`}
-                      className="text-xs font-medium text-emerald-600 hover:text-emerald-700"
-                    >
-                      Edit
-                    </Link>
+                    <div className="mt-2 flex justify-end gap-3">
+                      <Link
+                        href={`/transactions/${transaction.id}/edit`}
+                        className="text-xs font-medium text-emerald-600 hover:text-emerald-700"
+                      >
+                        Edit
+                      </Link>
 
-                    <form action={cancelTransaction} className="mt-2">
-                      <input type="hidden" name="transactionId" value={transaction.id} />
-                      <button className="text-xs font-medium text-red-600 hover:text-red-700">
-                        Delete
-                      </button>
-                    </form>
+                      <form action={cancelTransaction}>
+                        <input
+                          type="hidden"
+                          name="transactionId"
+                          value={transaction.id}
+                        />
+                        <button className="text-xs font-medium text-red-600 hover:text-red-700">
+                          Delete
+                        </button>
+                      </form>
+                    </div>
                   </div>
                 </div>
               );
