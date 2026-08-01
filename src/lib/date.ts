@@ -44,3 +44,43 @@ export function getTodayDateInputValue() {
 
   return `${year}-${month}-${day}`;
 }
+
+export function getCurrentMonthInputValue() {
+  const now = new Date();
+
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+
+  return `${year}-${month}`;
+}
+
+export function isMonthInputValue(value?: string | null) {
+  return Boolean(value && /^\d{4}-\d{2}$/.test(value));
+}
+
+export function parseMonthInputToBudgetPeriod(value?: string | null) {
+  const monthValue = isMonthInputValue(value)
+    ? value!
+    : getCurrentMonthInputValue();
+
+  const [year, month] = monthValue.split("-").map(Number);
+
+  const periodStart = new Date(Date.UTC(year, month - 1, 1, 12, 0, 0, 0));
+  const periodEnd = new Date(Date.UTC(year, month, 0, 12, 0, 0, 0));
+
+  return {
+    monthValue,
+    periodStart,
+    periodEnd,
+  };
+}
+
+export function formatMonthLabel(monthValue: string) {
+  const { periodStart } = parseMonthInputToBudgetPeriod(monthValue);
+
+  return new Intl.DateTimeFormat("en", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(periodStart);
+}
