@@ -1,4 +1,5 @@
-import { archiveBill, createBill } from "./actions";
+import { archiveBill } from "./actions";
+import { AddBillModal } from "./add-bill-modal";
 import {
   formatDateForDisplay,
   getTodayDateInputValue,
@@ -46,101 +47,16 @@ export default async function BillsPage() {
 
   return (
     <div>
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Bills</h1>
-        <p className="mt-2 text-slate-600">
-          Track upcoming bills before they become real expenses.
-        </p>
-      </div>
-
-      <form
-        action={createBill}
-        className="mt-6 rounded-xl border border-slate-200 bg-white p-5"
-      >
-        <h2 className="font-semibold text-slate-900">Add bill</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Create a bill you want to track, like rent, internet, electricity, or
-          subscriptions.
-        </p>
-
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="text-sm font-medium text-slate-700">
-              Bill name
-            </label>
-            <input
-              name="name"
-              placeholder="e.g. Internet"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-slate-700">
-              Amount
-            </label>
-            <input
-              name="amount"
-              placeholder="30.00"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-slate-700">
-              Expense category
-            </label>
-            <select
-              name="categoryId"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-              required
-            >
-              <option value="">Select category</option>
-              {expenseCategories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-slate-700">
-              Due date
-            </label>
-            <input
-              type="date"
-              name="nextDueDate"
-              defaultValue={today}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-slate-700">
-              Repeat
-            </label>
-            <select
-              name="repeatType"
-              defaultValue="MONTHLY"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-            >
-              <option value="NONE">Does not repeat</option>
-              <option value="WEEKLY">Weekly</option>
-              <option value="MONTHLY">Monthly</option>
-              <option value="YEARLY">Yearly</option>
-            </select>
-          </div>
-
+      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Bills</h1>
+          <p className="mt-2 text-slate-600">
+            Track upcoming bills before they become real expenses.
+          </p>
         </div>
 
-        <button className="mt-4 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
-          Save bill
-        </button>
-      </form>
+        <AddBillModal expenseCategories={expenseCategories} today={today} />
+      </div>
 
       <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
         <div className="flex items-center justify-between">
@@ -152,7 +68,12 @@ export default async function BillsPage() {
 
         <div className="mt-4 space-y-3">
           {bills.length === 0 ? (
-            <p className="text-sm text-slate-500">No bills added yet.</p>
+            <div className="rounded-lg bg-slate-50 p-4">
+              <p className="text-sm text-slate-600">
+                No bills added yet. Add your first bill to track upcoming
+                payments.
+              </p>
+            </div>
           ) : (
             bills.map((bill) => {
               const dueDate = formatDateForDisplay(bill.nextDueDate);
@@ -173,7 +94,6 @@ export default async function BillsPage() {
                         {categoryName} · Due {dueDate} ·{" "}
                         {formatRepeatLabel(bill.repeatType)}
                       </p>
-                                       
                     </div>
 
                     <div className="text-left md:text-right">
