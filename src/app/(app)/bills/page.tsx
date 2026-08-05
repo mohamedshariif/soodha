@@ -1,7 +1,8 @@
-import { archiveBill } from "./actions";
+import { archiveBill, markBillAsPaid } from "./actions";
 import { AddBillModal } from "./add-bill-modal";
 import {
   formatDateForDisplay,
+  formatDateForInput,
   getTodayDateInputValue,
 } from "@/lib/date";
 import { getCurrentAppUser } from "@/lib/current-app-user";
@@ -104,12 +105,28 @@ export default async function BillsPage() {
                         )}
                       </p>
 
+                      <div className="mt-2 flex flex-col items-start gap-2 md:items-end">
+                      <form action={markBillAsPaid}>
+                        <input type="hidden" name="billId" value={bill.id}/>
+                        <input 
+                          type="hidden"
+                          name="dueDate"
+                          value={formatDateForInput(bill.nextDueDate)}
+                        />
+
+                        <button className="mt-2 text-xs font-medium text-green-600 hover:text-green-700">
+                          Mark as Paid
+                        </button>
+                      </form>
+
                       <form action={archiveBill} className="mt-2">
                         <input type="hidden" name="billId" value={bill.id} />
                         <button className="text-xs font-medium text-red-600 hover:text-red-700">
                           Delete bill
                         </button>
                       </form>
+                      </div>
+
                     </div>
                   </div>
                 </div>

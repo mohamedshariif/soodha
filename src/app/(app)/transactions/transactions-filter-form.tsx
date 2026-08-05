@@ -14,8 +14,8 @@ type TransactionFilters = {
   search: string;
   type: string;
   categoryId: string;
-  from: string;
-  to: string;
+  from?: string;
+  to?: string;
 };
 
 function buildTransactionsUrl(filters: TransactionFilters) {

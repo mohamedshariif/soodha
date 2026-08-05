@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 type TransactionSearchParams = {
   type?: string;
-  categortId?: string;
+  categoryId?: string;
   search?: string;
   from?: string;
   to?: string;
@@ -27,7 +27,7 @@ function isDateInput(value?: string) {
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams:Promise<TransactionsSearchParams>;
+  searchParams:Promise<TransactionSearchParams>;
 }) {
   const appUser = await getCurrentAppUser();
 
@@ -241,25 +241,28 @@ export default async function TransactionsPage({
                       {transaction.type}
                     </p>
 
-                    <div className="mt-2 flex justify-end gap-3">
-                      <Link
-                        href={`/transactions/${transaction.id}/edit`}
-                        className="text-xs font-medium text-emerald-600 hover:text-emerald-700"
-                      >
-                        Edit
-                      </Link>
+                    {transaction.sourceType === "MANUAL" ? (
+                      <div className="mt-2 flex justify-end gap-3">
+                        <Link
+                          href={`/transactions/${transaction.id}/edit`}
+                          className="text-xs font-medium text-emerald-600 hover:text-emerald-700"
+                        >
+                          Edit
+                        </Link>
 
-                      <form action={cancelTransaction}>
-                        <input
-                          type="hidden"
-                          name="transactionId"
-                          value={transaction.id}
-                        />
-                        <button className="text-xs font-medium text-red-600 hover:text-red-700">
-                          Delete
-                        </button>
-                      </form>
-                    </div>
+                        <form action={cancelTransaction}>
+                          <input type="hidden" name="transactionId" value={transaction.id} />
+                          <button className="text-xs font-medium text-red-600 hover:text-red-700">
+                            Delete
+                          </button>
+                        </form>
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-xs text-slate-500">
+                        Managed by bill
+                      </p>
+                    )}
+
                   </div>
                 </div>
               );
