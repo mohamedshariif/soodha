@@ -208,6 +208,39 @@ const currency =
                 : "text-slate-900"
             }
           />
+          <BillSummaryCard
+            label="Needs attention"
+            value={formatMoneyFromMinorUnits(attentionTotalMinor, currency)}
+            helper={`${billsNeedingAttention.length} bill${
+              billsNeedingAttention.length === 1 ? "" : "s"
+            } due within 7 days`}
+            valueClassName={
+              billsNeedingAttention.length > 0
+                ? "text-amber-600"
+                : "text-slate-900"
+            }
+          />
+
+          <BillSummaryCard
+            label={`This month`}
+            value={formatMoneyFromMinorUnits(attentionTotalMinor, currency)}
+            helper={`Paid ${formatMoneyFromMinorUnits(
+              paidThisMonthMinor,
+              currency
+            )} * Remaining ${formatMoneyFromMinorUnits(
+              remainingThisMonthMinor,
+              currency
+            )}`}
+          />
+
+          <BillSummaryCard
+            label="Paid this month"
+            value={formatMoneyFromMinorUnits(paidThisMonthMinor, currency)}
+            helper={`${billPaymentsThisMonth.length} payment${
+              billPaymentsThisMonth.length === 1 ? "" : "s"
+            } recorded in ${formatMonthLabel(currentMonthValue)}`}
+            valueClassName="text-emerald-600"
+          />
 
           <BillSummaryCard
             label="Scheduled later"

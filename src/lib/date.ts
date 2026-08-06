@@ -84,3 +84,14 @@ export function formatMonthLabel(monthValue: string) {
     timeZone: "UTC",
   }).format(periodStart);
 }
+
+export function addDaysUtc(date: Date, days: number) {
+  return new Date(
+    Date.UTC(
+      date.getFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate() + days,
+      12, 0, 0, 0
+    )
+  );
+}

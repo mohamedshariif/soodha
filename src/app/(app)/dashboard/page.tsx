@@ -1,8 +1,11 @@
 import Link from "next/link";
 import {
+  addDaysUtc,
   formatDateForDisplay,
   formatMonthLabel,
   getCurrentMonthInputValue,
+  getTodayDateInputValue,
+  parseDateInputToTransactionDate,
   parseMonthInputToBudgetPeriod,
 } from "@/lib/date";
 import { getCurrentAppUser } from "@/lib/current-app-user";
@@ -25,7 +28,7 @@ export default async function DashboardPage() {
   const { periodStart, periodEnd } =
     parseMonthInputToBudgetPeriod(currentMonthValue);
 
-  const [account, incomeTotal, expenseTotal, recentTransactions, budgets] =
+  const [account, incomeTotal, expenseTotal, recentTransactions, budgets, activeBills, billPaymentsThisMonth] =
     await Promise.all([
       prisma.account.findFirst({
         where: {
@@ -100,6 +103,30 @@ export default async function DashboardPage() {
           createdAt: "asc",
         },
       }),
+
+      prisma.bill.findMany({
+            where: {
+              userId: appUser.id,
+              status: "ACTIVE",
+              deletedAt: null,
+            },
+            include: {
+              category: true,
+            },
+            orderBy: {
+              nextDueDate: "asc",
+            },
+          }),
+
+      prisma.billPayment.findMany({
+        where: {
+          userId: appUser.id,
+          dueDate: {
+            gte: periodStart,
+            lte: periodEnd,
+          },
+        },
+      }),
     ]);
 
   const budgetCategoryIds = budgets
@@ -141,6 +168,39 @@ export default async function DashboardPage() {
   const expenseTotalMinor = expenseTotal._sum.amountMinor ?? zero;
   const balanceMinor = account?.currentBalanceMinor ?? zero;
   const currency = account?.currency ?? budgets[0]?.currency ?? "USD";
+
+  const todayInputValue = getTodayDateInputValue();
+  const todayDate = parseDateInputToTransactionDate(todayInputValue);
+  const billsAttentionEndDate = addDaysUtc(todayDate, 7);
+
+  const billsNeedingAttention = activeBills.filter((bill) => {
+    return bill.nextDueDate.getTime() <= billsAttentionEndDate.getTime();
+  });
+
+  const remainingBillsThisMonth = activeBills.filter((bill) => {
+    return (
+      bill.nextDueDate.getTime() >= periodStart.getTime() &&
+      bill.nextDueDate.getTime() <= periodEnd.getTime()
+    );
+  });
+
+  const dueSoonBillsTotalMinor = billsNeedingAttention.reduce((total, bill) => {
+    return total + bill.amountMinor
+  }, zero);
+
+  const paidBillsThisMonthMinor = billPaymentsThisMonth.reduce(
+    (total, payment) => {
+      return total + payment.amountMinor;
+    },
+    zero
+  );
+
+  const remainingBillsThisMonthMinor = remainingBillsThisMonth.reduce(
+    (total, bill) => {
+      return total + bill.amountMinor;
+    },
+    zero
+  );
 
   const budgetHealthItems = budgets.map((budget) => {
     const spentMinor = budget.categoryId
@@ -371,6 +431,106 @@ export default async function DashboardPage() {
           </>
         )}
       </section>
+
+     <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="font-semibold text-slate-900">Bills snapshot</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Quick view for {formatMonthLabel(currentMonthValue)}
+          </p>
+        </div>
+
+        <Link
+          href="/bills"
+          className="text-sm font-medium text-emerald-600 hover:text-emerald-700"
+        >
+          View bills
+        </Link>
+      </div>
+
+      {activeBills.length === 0 && billPaymentsThisMonth.length === 0 ? (
+        <div className="mt-4 rounded-lg bg-slate-50 p-4">
+          <p className="text-sm text-slate-600">
+            No bills tracked yet.
+          </p>
+          <Link
+            href="/bills"
+            className="mt-2 inline-block text-sm font-medium text-emerald-600 hover:text-emerald-700"
+          >
+            Add a bill
+          </Link>
+        </div>
+      ) : (
+        <>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-lg bg-amber-50 p-4">
+              <p className="text-sm text-amber-700">Due soon</p>
+              <p className="mt-1 text-lg font-semibold text-amber-700">
+                {formatMoneyFromMinorUnits(dueSoonBillsTotalMinor, currency)}
+              </p>
+              <p className="mt-1 text-xs text-amber-700">
+                {billsNeedingAttention.length} bill
+                {billsNeedingAttention.length === 1 ? "" : "s"} need attention
+              </p>
+            </div>
+
+            <div className="rounded-lg bg-slate-50 p-4">
+              <p className="text-sm text-slate-600">Remaining this month</p>
+              <p className="mt-1 text-lg font-semibold text-slate-900">
+                {formatMoneyFromMinorUnits(
+                  remainingBillsThisMonthMinor,
+                  currency
+                )}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                {remainingBillsThisMonth.length} unpaid bill
+                {remainingBillsThisMonth.length === 1 ? "" : "s"}
+              </p>
+            </div>
+
+            <div className="rounded-lg bg-emerald-50 p-4">
+              <p className="text-sm text-emerald-700">Paid this month</p>
+              <p className="mt-1 text-lg font-semibold text-emerald-700">
+                {formatMoneyFromMinorUnits(paidBillsThisMonthMinor, currency)}
+              </p>
+              <p className="mt-1 text-xs text-emerald-700">
+                {billPaymentsThisMonth.length} payment
+                {billPaymentsThisMonth.length === 1 ? "" : "s"} recorded
+              </p>
+            </div>
+          </div>
+
+          {billsNeedingAttention.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <p className="text-sm font-medium text-slate-900">
+                Bills needing attention
+              </p>
+
+              {billsNeedingAttention.slice(0, 3).map((bill) => (
+                <div
+                  key={bill.id}
+                  className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">
+                      {bill.name}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Due {formatDateForDisplay(bill.nextDueDate)}
+                    </p>
+                  </div>
+
+                  <p className="text-sm font-semibold text-slate-900">
+                    {formatMoneyFromMinorUnits(bill.amountMinor, bill.currency)}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </section>
 
       <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
         <div className="flex items-center justify-between">
