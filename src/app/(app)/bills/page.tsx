@@ -3,8 +3,11 @@ import { AddBillModal } from "./add-bill-modal";
 import {
   formatDateForDisplay,
   formatDateForInput,
+  formatMonthLabel,
   getTodayDateInputValue,
+  getCurrentMonthInputValue,
   parseDateInputToTransactionDate,
+  parseMonthInputToBudgetPeriod,
 } from "@/lib/date";
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
@@ -35,17 +38,9 @@ function getDaysUntilDue(dueDate: Date, today: Date) {
 function getDueStatusLabel(dueDate: Date, today: Date) {
   const daysUntilDue = getDaysUntilDue(dueDate, today);
 
-  if (daysUntilDue < 0) {
-    return "Overdue";
-  }
-
-  if (daysUntilDue === 0) {
-    return "Due today";
-  }
-
-  if (daysUntilDue === 1) {
-    return "Due tomorrow";
-  }
+  if (daysUntilDue < 0) return "Overdue";
+  if (daysUntilDue === 0) return "Due today";
+  if (daysUntilDue === 1) return "Due tomorrow";
 
   return `Due in ${daysUntilDue} days`;
 }
@@ -53,13 +48,9 @@ function getDueStatusLabel(dueDate: Date, today: Date) {
 function getDueStatusClassName(dueDate: Date, today: Date) {
   const daysUntilDue = getDaysUntilDue(dueDate, today);
 
-  if (daysUntilDue < 0) {
-    return "bg-red-50 text-red-700";
-  }
+  if (daysUntilDue < 0) return "bg-red-50 text-red-700";
 
-  if (daysUntilDue <= 1) {
-    return "bg-amber-50 text-amber-700";
-  }
+  if (daysUntilDue <= 1) return "bg-amber-50 text-amber-700";
 
   return "bg-emerald-50 text-emerald-700";
 }
@@ -71,11 +62,17 @@ export default async function BillsPage() {
     throw new Error("You must be signed in.");
   }
 
+  const zero = BigInt(0);
+
   const todayInputValue = getTodayDateInputValue();
   const todayDate = parseDateInputToTransactionDate(todayInputValue);
   const attentionEndDate = addDaysUtc(todayDate, 7);
 
-  const [expenseCategories, bills, recentBillPayments] = await Promise.all([
+  const currentMonthValue = getCurrentMonthInputValue();
+  const { periodStart, periodEnd } =
+  parseMonthInputToBudgetPeriod(currentMonthValue);
+
+  const [expenseCategories, bills, recentBillPayments, billPaymentsThisMonth] = await Promise.all([
     prisma.category.findMany({
       where: {
         userId: appUser.id,
@@ -113,7 +110,22 @@ export default async function BillsPage() {
       },
       take: 5,
     }),
+
+    prisma.billPayment.findMany({
+      where: {
+        userId: appUser.id,
+        dueDate: {
+          gte: periodStart,
+          lte: periodEnd,
+        },
+      },
+    }),
   ]);
+
+  const expenseCategoryOptions = expenseCategories.map((category) => ({
+    id: category.id,
+    name: category.name,
+  }));
 
   const billsNeedingAttention = bills.filter((bill) => {
     return bill.nextDueDate.getTime() <= attentionEndDate.getTime();
@@ -125,18 +137,42 @@ export default async function BillsPage() {
 
   const attentionTotalMinor = billsNeedingAttention.reduce((total, bill) => {
     return total + bill.amountMinor;
-  }, BigInt(0));
+  }, zero);
 
   const scheduledTotalMinor = scheduledBills.reduce((total, bill) => {
     return total + bill.amountMinor;
-  }, BigInt(0));
+  }, zero);
 
   const recentPaidTotalMinor = recentBillPayments.reduce((total, payment) => {
     return total + payment.amountMinor;
-  }, BigInt(0));
+  }, zero);
 
-  const currency =
-    bills[0]?.currency ?? recentBillPayments[0]?.currency ?? "USD";
+  const remainingBillsThisMonth = bills.filter((bill) => {
+    return (
+      bill.nextDueDate.getTime() >= periodStart.getTime() &&
+      bill.nextDueDate.getTime() <= periodEnd.getTime()
+    );
+  });
+
+const paidThisMonthMinor = billPaymentsThisMonth.reduce((total, payment) => {
+  return total + payment.amountMinor;
+}, zero);
+
+const remainingThisMonthMinor = remainingBillsThisMonth.reduce(
+  (total, bill) => {
+    return total + bill.amountMinor;
+  },
+  zero
+);
+
+const totalBillsThisMonthMinor =
+  paidThisMonthMinor + remainingThisMonthMinor;
+
+const currency =
+  bills[0]?.currency ??
+  recentBillPayments[0]?.currency ??
+  billPaymentsThisMonth[0]?.currency ??
+  "USD";
 
   return (
     <div>
@@ -149,39 +185,89 @@ export default async function BillsPage() {
         </div>
 
         <AddBillModal
-          expenseCategories={expenseCategories}
+          expenseCategories={expenseCategoryOptions}
           today={todayInputValue}
         />
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <BillSummaryCard
-          label="Needs attention"
-          value={formatMoneyFromMinorUnits(attentionTotalMinor, currency)}
-          helper={`${billsNeedingAttention.length} bill${
-            billsNeedingAttention.length === 1 ? "" : "s"
-          } due soon`}
-          valueClassName={
-            billsNeedingAttention.length > 0 ? "text-amber-600" : "text-slate-900"
-          }
-        />
+      <div className="mt-6">
+        <h2 className="text-sm font-semibold text-slate-700">
+          Bill status overview
+        </h2>
 
-        <BillSummaryCard
-          label="Scheduled later"
-          value={formatMoneyFromMinorUnits(scheduledTotalMinor, currency)}
-          helper={`${scheduledBills.length} scheduled bill${
-            scheduledBills.length === 1 ? "" : "s"
-          }`}
-        />
+        <div className="mt-3 grid gap-4 md:grid-cols-3">
+          <BillSummaryCard
+            label="Needs attention"
+            value={formatMoneyFromMinorUnits(attentionTotalMinor, currency)}
+            helper={`${billsNeedingAttention.length} bill${
+              billsNeedingAttention.length === 1 ? "" : "s"
+            } due soon`}
+            valueClassName={
+              billsNeedingAttention.length > 0
+                ? "text-amber-600"
+                : "text-slate-900"
+            }
+          />
 
-        <BillSummaryCard
-          label="Recently paid"
-          value={formatMoneyFromMinorUnits(recentPaidTotalMinor, currency)}
-          helper={`${recentBillPayments.length} recent payment${
-            recentBillPayments.length === 1 ? "" : "s"
-          }`}
-          valueClassName="text-emerald-600"
-        />
+          <BillSummaryCard
+            label="Scheduled later"
+            value={formatMoneyFromMinorUnits(scheduledTotalMinor, currency)}
+            helper={`${scheduledBills.length} scheduled bill${
+              scheduledBills.length === 1 ? "" : "s"
+            }`}
+          />
+
+          <BillSummaryCard
+            label="Recently paid"
+            value={formatMoneyFromMinorUnits(recentPaidTotalMinor, currency)}
+            helper={`${recentBillPayments.length} recent payment${
+              recentBillPayments.length === 1 ? "" : "s"
+            }`}
+            valueClassName="text-emerald-600"
+          />
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <h2 className="text-sm font-semibold text-slate-700">
+          Monthly bill summary
+        </h2>
+
+        <div className="mt-3 grid gap-4 md:grid-cols-3">
+          <BillSummaryCard
+            label={`Bills in ${formatMonthLabel(currentMonthValue)}`}
+            value={formatMoneyFromMinorUnits(
+              totalBillsThisMonthMinor,
+              currency
+            )}
+            helper="Paid and remaining bills due this month"
+          />
+
+          <BillSummaryCard
+            label="Paid for this month"
+            value={formatMoneyFromMinorUnits(paidThisMonthMinor, currency)}
+            helper={`${billPaymentsThisMonth.length} payment${
+              billPaymentsThisMonth.length === 1 ? "" : "s"
+            } recorded`}
+            valueClassName="text-emerald-600"
+          />
+
+          <BillSummaryCard
+            label="Remaining this month"
+            value={formatMoneyFromMinorUnits(
+              remainingThisMonthMinor,
+              currency
+            )}
+            helper={`${remainingBillsThisMonth.length} unpaid bill${
+              remainingBillsThisMonth.length === 1 ? "" : "s"
+            } due this month`}
+            valueClassName={
+              remainingBillsThisMonth.length > 0
+                ? "text-amber-600"
+                : "text-slate-900"
+            }
+          />
+        </div>
       </div>
 
       <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
@@ -189,9 +275,7 @@ export default async function BillsPage() {
           <h2 className="font-semibold text-slate-900">
             Bills needing attention
           </h2>
-          <p className="text-sm text-slate-500">
-            Due within 7 days
-          </p>
+          <p className="text-sm text-slate-500">Due within 7 days</p>
         </div>
 
         <div className="mt-4 space-y-3">
@@ -274,9 +358,7 @@ export default async function BillsPage() {
       <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-slate-900">Scheduled bills</h2>
-          <p className="text-sm text-slate-500">
-            Due after 7 days
-          </p>
+          <p className="text-sm text-slate-500">Due after 7 days</p>
         </div>
 
         <div className="mt-4 space-y-3">
