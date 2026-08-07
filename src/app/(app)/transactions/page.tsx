@@ -17,7 +17,18 @@ type TransactionSearchParams = {
 };
 
 function isTransactionType(value?: string) {
-  return value === "INCOME" || value === "EXPENSE";
+  return value === "INCOME" || value === "EXPENSE" || "TRANSFER";
+}
+
+function getManagedSourceLabel(sourceType: string) {
+  switch (sourceType) {
+    case "BILL_PAYMENT":
+      return "Managed by bill";
+    case "SAVINGS_CONTRIBUTION":
+      return "Managed by savings";
+    default:
+      return "Managed by feature";
+  }
 }
 
 function isDateInput(value?: string) {
@@ -259,7 +270,7 @@ export default async function TransactionsPage({
                       </div>
                     ) : (
                       <p className="mt-2 text-xs text-slate-500">
-                        Managed by bill
+                        {getManagedSourceLabel(transaction.sourceType)}
                       </p>
                     )}
 

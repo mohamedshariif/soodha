@@ -11,6 +11,7 @@ import {
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
+import { SummaryCard } from "@/components/summaryCard";
 
 export const dynamic = "force-dynamic";
 
@@ -484,10 +485,25 @@ export default async function DashboardPage() {
                 )}
               </p>
               <p className="mt-1 text-xs text-slate-500">
-                {remainingBillsThisMonth.length} unpaid bill
+                {remainingBillsThisMonth.length} unpaid bill due this month
                 {remainingBillsThisMonth.length === 1 ? "" : "s"}
               </p>
             </div>
+            {/* <SummaryCard
+                        label="Remaining this month"
+                        value={formatMoneyFromMinorUnits(
+                          remainingBillsThisMonthMinor,
+                          currency
+                        )}
+                        helper={`${remainingBillsThisMonth.length} unpaid bill${
+                          remainingBillsThisMonth.length === 1 ? "" : "s"
+                        } due this month`}
+                        valueClassName={
+                          remainingBillsThisMonth.length > 0
+                            ? "text-amber-600"
+                            : "text-slate-900"
+                        }
+                      /> */}
 
             <div className="rounded-lg bg-emerald-50 p-4">
               <p className="text-sm text-emerald-700">Paid this month</p>

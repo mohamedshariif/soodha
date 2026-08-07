@@ -192,22 +192,10 @@ const currency =
 
       <div className="mt-6">
         <h2 className="text-sm font-semibold text-slate-700">
-          Bill status overview
+          Monthly bill summary
         </h2>
 
         <div className="mt-3 grid gap-4 md:grid-cols-3">
-          <BillSummaryCard
-            label="Needs attention"
-            value={formatMoneyFromMinorUnits(attentionTotalMinor, currency)}
-            helper={`${billsNeedingAttention.length} bill${
-              billsNeedingAttention.length === 1 ? "" : "s"
-            } due soon`}
-            valueClassName={
-              billsNeedingAttention.length > 0
-                ? "text-amber-600"
-                : "text-slate-900"
-            }
-          />
           <BillSummaryCard
             label="Needs attention"
             value={formatMoneyFromMinorUnits(attentionTotalMinor, currency)}
@@ -222,8 +210,8 @@ const currency =
           />
 
           <BillSummaryCard
-            label={`This month`}
-            value={formatMoneyFromMinorUnits(attentionTotalMinor, currency)}
+            label={`Bills in ${formatMonthLabel(currentMonthValue)}`}
+            value={formatMoneyFromMinorUnits(totalBillsThisMonthMinor, currency)}
             helper={`Paid ${formatMoneyFromMinorUnits(
               paidThisMonthMinor,
               currency
@@ -242,7 +230,7 @@ const currency =
             valueClassName="text-emerald-600"
           />
 
-          <BillSummaryCard
+          {/* <BillSummaryCard
             label="Scheduled later"
             value={formatMoneyFromMinorUnits(scheduledTotalMinor, currency)}
             helper={`${scheduledBills.length} scheduled bill${
@@ -251,17 +239,25 @@ const currency =
           />
 
           <BillSummaryCard
-            label="Recently paid"
-            value={formatMoneyFromMinorUnits(recentPaidTotalMinor, currency)}
-            helper={`${recentBillPayments.length} recent payment${
-              recentBillPayments.length === 1 ? "" : "s"
-            }`}
-            valueClassName="text-emerald-600"
-          />
+            label="Remaining this month"
+            value={formatMoneyFromMinorUnits(
+              remainingThisMonthMinor,
+              currency
+            )}
+            helper={`${remainingBillsThisMonth.length} unpaid bill${
+              remainingBillsThisMonth.length === 1 ? "" : "s"
+            } due this month`}
+            valueClassName={
+              remainingBillsThisMonth.length > 0
+                ? "text-amber-600"
+                : "text-slate-900"
+            }
+          /> */}
+
         </div>
       </div>
 
-      <div className="mt-6">
+      {/* <div className="mt-6">
         <h2 className="text-sm font-semibold text-slate-700">
           Monthly bill summary
         </h2>
@@ -284,24 +280,8 @@ const currency =
             } recorded`}
             valueClassName="text-emerald-600"
           />
-
-          <BillSummaryCard
-            label="Remaining this month"
-            value={formatMoneyFromMinorUnits(
-              remainingThisMonthMinor,
-              currency
-            )}
-            helper={`${remainingBillsThisMonth.length} unpaid bill${
-              remainingBillsThisMonth.length === 1 ? "" : "s"
-            } due this month`}
-            valueClassName={
-              remainingBillsThisMonth.length > 0
-                ? "text-amber-600"
-                : "text-slate-900"
-            }
-          />
         </div>
-      </div>
+      </div> */}
 
       <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
         <div className="flex items-center justify-between">

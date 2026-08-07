@@ -45,9 +45,12 @@ export function TransactionsFilterForm({
   const [isPending, startTransition] = useTransition();
   const [searchValue, setSearchValue] = useState(filters.search);
 
-  const visibleCategories = filters.type
-    ? categories.filter((category) => category.type === filters.type)
-    : categories;
+  const visibleCategories = 
+    filters.type === "TRANSFER"
+      ? []
+      : filters.type
+        ? categories.filter((category) => category.type === filters.type)
+        : categories;
 
   function updateFilters(nextFilters: Partial<TransactionFilters>) {
     const url = buildTransactionsUrl({
@@ -120,6 +123,7 @@ export function TransactionsFilterForm({
             <option value="">All types</option>
             <option value="INCOME">Income</option>
             <option value="EXPENSE">Expense</option>
+            <option value="TRANSFER">Transfer</option>
           </select>
         </div>
 
@@ -134,6 +138,7 @@ export function TransactionsFilterForm({
                 categoryId: event.target.value,
               })
             }
+            disabled={filters.type === "TRANSFER"}
             className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
           >
             <option value="">All categories</option>
