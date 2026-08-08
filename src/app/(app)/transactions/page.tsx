@@ -1,14 +1,16 @@
 import Link from "next/link";
-import { getCurrentAppUser } from "@/lib/current-app-user";
 import { cancelTransaction } from "./actions";
-import { formatMoneyFromMinorUnits } from "@/lib/money";
-import { formatDateForDisplay, parseDateInputToTransactionDate } from "@/lib/date";
 import { TransactionsFilterForm } from "./transactions-filter-form";
+import { formatDateForDisplay, parseDateInputToTransactionDate } from "@/lib/date";
+import { getCurrentAppUser } from "@/lib/current-app-user";
+import { formatMoneyFromMinorUnits } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-type TransactionSearchParams = {
+type TransactionFilterType = "INCOME" | "EXPENSE" | "TRANSFER";
+
+type TransactionsSearchParams = {
   type?: string;
   categoryId?: string;
   search?: string;
@@ -16,8 +18,12 @@ type TransactionSearchParams = {
   to?: string;
 };
 
-function isTransactionType(value?: string) {
-  return value === "INCOME" || value === "EXPENSE" || "TRANSFER";
+function isTransactionType(value?: string): value is TransactionFilterType {
+  return value === "INCOME" || value === "EXPENSE" || value === "TRANSFER";
+}
+
+function isDateInput(value?: string) {
+  return Boolean(value && /^\d{4}-\d{2}-\d{2}$/.test(value));
 }
 
 function getManagedSourceLabel(sourceType: string) {
@@ -26,19 +32,17 @@ function getManagedSourceLabel(sourceType: string) {
       return "Managed by bill";
     case "SAVINGS_CONTRIBUTION":
       return "Managed by savings";
+    case "DEBT_PAYMENT":
+      return "Managed by debt";
     default:
       return "Managed by feature";
   }
 }
 
-function isDateInput(value?: string) {
-  return Boolean(value && /^\d{4}-\d{2}-\d{2}$/.test(value));
-}
-
 export default async function TransactionsPage({
   searchParams,
 }: {
-  searchParams:Promise<TransactionSearchParams>;
+  searchParams: Promise<TransactionsSearchParams>;
 }) {
   const appUser = await getCurrentAppUser();
 
@@ -48,11 +52,16 @@ export default async function TransactionsPage({
 
   const filters = await searchParams;
 
-  const type = isTransactionType(filters.type) ? filters.type : "";
+  const selectedType: TransactionFilterType | "" = isTransactionType(
+    filters.type
+  )
+    ? filters.type
+    : "";
+
   const search = filters.search?.trim() ?? "";
-  const from = isDateInput(filters.from) ? filters.from : "";
-  const to = isDateInput(filters.to) ? filters.to : "";
-  const selectedCategoryId = filters.categoryId?.trim() ?? "";
+  const from = isDateInput(filters.from) ? filters.from! : "";
+  const to = isDateInput(filters.to) ? filters.to! : "";
+  const selectedCategoryId = filters.categoryId ?? "";
 
   const [account, categories] = await Promise.all([
     prisma.account.findFirst({
@@ -74,11 +83,12 @@ export default async function TransactionsPage({
     }),
   ]);
 
-  const validCategoryId = categories.some(
-    (category) => category.id === selectedCategoryId
-  )
-    ? selectedCategoryId
-    : "";
+  const validCategoryId =
+    selectedType === "TRANSFER"
+      ? ""
+      : categories.some((category) => category.id === selectedCategoryId)
+        ? selectedCategoryId
+        : "";
 
   const dateFilter: {
     gte?: Date;
@@ -101,7 +111,11 @@ export default async function TransactionsPage({
       status: "ACTIVE",
       deletedAt: null,
 
-      ...(type ? { type } : {}),
+      ...(selectedType
+        ? {
+            type: selectedType,
+          }
+        : {}),
 
       ...(validCategoryId
         ? {
@@ -115,13 +129,13 @@ export default async function TransactionsPage({
               {
                 description: {
                   contains: search,
-                  mode: "insensitive" as const,
+                  mode: "insensitive",
                 },
               },
               {
                 note: {
                   contains: search,
-                  mode: "insensitive" as const,
+                  mode: "insensitive",
                 },
               },
             ],
@@ -184,10 +198,14 @@ export default async function TransactionsPage({
       </section>
 
       <TransactionsFilterForm
-        categories={categories}
+        categories={categories.map((category) => ({
+          id: category.id,
+          name: category.name,
+          type: category.type,
+        }))}
         filters={{
           search,
-          type,
+          type: selectedType,
           categoryId: validCategoryId,
           from,
           to,
@@ -211,6 +229,8 @@ export default async function TransactionsPage({
           ) : (
             transactions.map((transaction) => {
               const isIncome = transaction.type === "INCOME";
+              const isExpense = transaction.type === "EXPENSE";
+              const isTransfer = transaction.type === "TRANSFER";
 
               return (
                 <div
@@ -238,10 +258,14 @@ export default async function TransactionsPage({
                   <div className="text-right">
                     <p
                       className={`text-sm font-semibold ${
-                        isIncome ? "text-emerald-600" : "text-red-600"
+                        isIncome
+                          ? "text-emerald-600"
+                          : isExpense
+                            ? "text-red-600"
+                            : "text-blue-600"
                       }`}
                     >
-                      {isIncome ? "+" : "-"}
+                      {isIncome ? "+" : isExpense ? "-" : ""}
                       {formatMoneyFromMinorUnits(
                         transaction.amountMinor,
                         transaction.currency
@@ -249,7 +273,7 @@ export default async function TransactionsPage({
                     </p>
 
                     <p className="mt-1 text-xs text-slate-500">
-                      {transaction.type}
+                      {isTransfer ? "TRANSFER" : transaction.type}
                     </p>
 
                     {transaction.sourceType === "MANUAL" ? (
@@ -262,7 +286,11 @@ export default async function TransactionsPage({
                         </Link>
 
                         <form action={cancelTransaction}>
-                          <input type="hidden" name="transactionId" value={transaction.id} />
+                          <input
+                            type="hidden"
+                            name="transactionId"
+                            value={transaction.id}
+                          />
                           <button className="text-xs font-medium text-red-600 hover:text-red-700">
                             Delete
                           </button>
@@ -273,7 +301,6 @@ export default async function TransactionsPage({
                         {getManagedSourceLabel(transaction.sourceType)}
                       </p>
                     )}
-
                   </div>
                 </div>
               );

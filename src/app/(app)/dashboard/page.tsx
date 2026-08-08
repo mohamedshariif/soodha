@@ -29,7 +29,7 @@ export default async function DashboardPage() {
   const { periodStart, periodEnd } =
     parseMonthInputToBudgetPeriod(currentMonthValue);
 
-  const [account, incomeTotal, expenseTotal, recentTransactions, budgets, activeBills, billPaymentsThisMonth] =
+  const [account, incomeTotal, expenseTotal, recentTransactions, budgets, activeBills, billPaymentsThisMonth, savingsGoals] =
     await Promise.all([
       prisma.account.findFirst({
         where: {
@@ -128,6 +128,19 @@ export default async function DashboardPage() {
           },
         },
       }),
+
+      prisma.savingsGoal.findMany({
+        where: {
+          userId: appUser.id,
+          status: {
+            in: ["ACTIVE", "COMPLETED"],
+          },
+          deletedAt: null,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
     ]);
 
   const budgetCategoryIds = budgets
@@ -202,6 +215,57 @@ export default async function DashboardPage() {
     },
     zero
   );
+  
+  // Savings goal management
+  const activeSavingsGoals = savingsGoals.filter((goal) => {
+    return goal.status === "ACTIVE";
+  });
+
+  const completedSavingsGoals = savingsGoals.filter((goal) => {
+    return goal.status === "COMPLETED";
+  });
+
+  const totalSavingsTargetMinor = savingsGoals.reduce((total, goal) => {
+    return total + goal.targetAmountMinor;
+  }, zero);
+
+  const totalSavedMinor = savingsGoals.reduce((total, goal) => {
+    return total + goal.currentAmountMinor;
+  }, zero);
+
+  const totalSavingsRemainingMinor = savingsGoals.reduce((total, goal) => {
+    const remaining = goal.targetAmountMinor - goal.currentAmountMinor;
+    
+    return total + (remaining > zero ? remaining : zero);
+  }, zero);
+
+  const savingsProgressPercent = 
+    totalSavingsTargetMinor > zero
+      ? Number((totalSavedMinor * oneHundred) / totalSavingsTargetMinor)
+      : 0;
+
+  const savingsProgressWidth = Math.min(savingsProgressPercent, 100);
+
+  const nextSavingsGoal = activeSavingsGoals.map((goal) => {
+    const remaining = goal.targetAmountMinor - goal.currentAmountMinor;
+
+    const progressPercent = goal.targetAmountMinor > zero
+      ? Number((goal.currentAmountMinor * oneHundred) / goal.targetAmountMinor)
+      : 0;
+
+    return {
+      id: goal.id,
+      name: goal.name,
+      currency: goal.currency,
+      currentAmountMinor : goal.currentAmountMinor,
+      targetAmountMinor: goal.targetAmountMinor,
+      remainingMinor: remaining > zero ? remaining : zero,
+      progressPercent,
+    };
+  })
+  .sort((a, b) => b.progressPercent - a.progressPercent)[0];
+
+  //Budget Management
 
   const budgetHealthItems = budgets.map((budget) => {
     const spentMinor = budget.categoryId
@@ -542,6 +606,111 @@ export default async function DashboardPage() {
                   </p>
                 </div>
               ))}
+            </div>
+          )}
+        </>
+      )}
+    </section>
+
+    <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="font-semibold text-slate-900">Savings snapshot</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Quick view of your savings progress.
+          </p>
+        </div>
+
+        <Link
+          href="/savings"
+          className="text-sm font-medium text-emerald-600 hover:text-emerald-700"
+        >
+          View savings
+        </Link>
+      </div>
+
+      {savingsGoals.length === 0 ? (
+        <div className="mt-4 rounded-lg bg-slate-50 p-4">
+          <p className="text-sm text-slate-600">
+            No savings goals created yet.
+          </p>
+
+          <Link
+            href="/savings"
+            className="mt-2 inline-block text-sm font-medium text-emerald-600 hover:text-emerald-700"
+          >
+            Create a savings goal
+          </Link>
+        </div>
+      ) : (
+        <>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-lg bg-emerald-50 p-4">
+              <p className="text-sm text-emerald-700">Saved so far</p>
+              <p className="mt-1 text-lg font-semibold text-emerald-700">
+                {formatMoneyFromMinorUnits(totalSavedMinor, currency)}
+              </p>
+              <p className="mt-1 text-xs text-emerald-700">
+                {completedSavingsGoals.length} completed goal
+                {completedSavingsGoals.length === 1 ? "" : "s"}
+              </p>
+            </div>
+
+            <div className="rounded-lg bg-amber-50 p-4">
+              <p className="text-sm text-amber-700">Remaining</p>
+              <p className="mt-1 text-lg font-semibold text-amber-700">
+                {formatMoneyFromMinorUnits(totalSavingsRemainingMinor, currency)}
+              </p>
+              <p className="mt-1 text-xs text-amber-700">
+                {activeSavingsGoals.length} active goal
+                {activeSavingsGoals.length === 1 ? "" : "s"}
+              </p>
+            </div>
+
+            <div className="rounded-lg bg-slate-50 p-4">
+              <p className="text-sm text-slate-600">Overall progress</p>
+              <p className="mt-1 text-lg font-semibold text-slate-900">
+                {savingsProgressPercent}%
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                Across {savingsGoals.length} goal
+                {savingsGoals.length === 1 ? "" : "s"}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100">
+            <div
+              className="h-full rounded-full bg-emerald-600"
+              style={{ width: `${savingsProgressWidth}%` }}
+            />
+          </div>
+
+          {nextSavingsGoal && (
+            <div className="mt-4 rounded-lg border border-slate-200 px-3 py-3">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-slate-900">
+                    Closest active goal
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    {nextSavingsGoal.name}
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-slate-900">
+                    {nextSavingsGoal.progressPercent}%
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {formatMoneyFromMinorUnits(
+                      nextSavingsGoal.remainingMinor,
+                      nextSavingsGoal.currency
+                    )}{" "}
+                    remaining
+                  </p>
+                </div>
+              </div>
             </div>
           )}
         </>
