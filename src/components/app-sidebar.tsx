@@ -20,13 +20,13 @@ export function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden min-h-screen w-64 border-r border-slate-200 bg-white px-4 py-6 lg:block">
-      <div className="mb-8">
+    <aside className="hidden h-screen w-64 shrink-0 flex-col border-r border-slate-200 bg-white px-4 py-6 lg:flex">
+      <div className="mb-8 shrink-0">
         <h1 className="text-2xl font-bold text-slate-900">Soodha</h1>
         <p className="text-sm text-slate-500">Money made clear</p>
       </div>
 
-      <nav className="space-y-1">
+      <nav className="flex-1 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(`${item.href}/`);
