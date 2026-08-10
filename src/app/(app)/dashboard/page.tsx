@@ -29,7 +29,18 @@ export default async function DashboardPage() {
   const { periodStart, periodEnd } =
     parseMonthInputToBudgetPeriod(currentMonthValue);
 
-  const [account, incomeTotal, expenseTotal, recentTransactions, budgets, activeBills, billPaymentsThisMonth, savingsGoals] =
+  const [
+    account, 
+    incomeTotal, 
+    expenseTotal, 
+    recentTransactions, 
+    budgets, 
+    activeBills, 
+    billPaymentsThisMonth, 
+    savingsGoals,
+    debts,
+    debtPaymentsThisMonth,
+  ] =
     await Promise.all([
       prisma.account.findFirst({
         where: {
@@ -141,6 +152,29 @@ export default async function DashboardPage() {
           createdAt: "desc",
         },
       }),
+
+      prisma.debt.findMany({
+        where: {
+          userId: appUser.id,
+          status: {
+            in: ["ACTIVE", "PAID_OFF"],
+          },
+          deletedAt: null,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      }),
+
+      prisma.debtPayment.findMany({
+        where: {
+          userId: appUser.id,
+          paidAt: {
+            gte: periodStart,
+            lte: periodEnd,
+          },
+        },
+      }),
     ]);
 
   const budgetCategoryIds = budgets
@@ -181,7 +215,13 @@ export default async function DashboardPage() {
   const incomeTotalMinor = incomeTotal._sum.amountMinor ?? zero;
   const expenseTotalMinor = expenseTotal._sum.amountMinor ?? zero;
   const balanceMinor = account?.currentBalanceMinor ?? zero;
-  const currency = account?.currency ?? budgets[0]?.currency ?? "USD";
+  const currency = 
+    account?.currency ?? 
+    budgets[0]?.currency ??
+    activeBills[0]?.currency ??
+    savingsGoals[0]?.currency ??
+    debts[0]?.currency ?? 
+    "USD";
 
   const todayInputValue = getTodayDateInputValue();
   const todayDate = parseDateInputToTransactionDate(todayInputValue);
@@ -313,6 +353,63 @@ export default async function DashboardPage() {
     .filter((budget) => budget.progressPercent >= budget.alertThresholdPercent)
     .sort((a, b) => b.progressPercent - a.progressPercent)
     .slice(0, 3);
+
+  // Debts management
+  const activeDebts = debts.filter((debt) => {
+    return debt.status === "ACTIVE";
+  });
+
+  const paidOffDebts = debts.filter((debt) => {
+    return debt.status === "PAID_OFF";
+  });
+
+  const totalDebtOriginalMinor = debts.reduce((total, debt) => {
+    return total + debt.originalAmountMinor;
+  }, zero);
+
+  const totalDebtRemainingMinor = activeDebts.reduce((total, debt) => {
+    return total + debt.remainingAmountMinor;
+  }, zero);
+
+  const totalDebtPaidMinor = debts.reduce((total, debt) => {
+    return total + (debt.originalAmountMinor - debt.remainingAmountMinor);
+  }, zero);
+
+  const debtPaymentsThisMonthMinor = debtPaymentsThisMonth.reduce((total, payment) => {
+    return total + payment.amountMinor;
+  }, zero);
+
+  const minimumDebtPaymentsMinor = activeDebts.reduce((total, debt) => {
+    return total + (debt.minimumPaymentMinor ?? zero);
+  }, zero);
+
+  const debtPayoffProgressPercent = totalDebtOriginalMinor > zero
+    ? Number((totalDebtPaidMinor * oneHundred) / totalDebtOriginalMinor)
+    : 0;
+
+  const debtPayoffProgressWidth = Math.min(debtPayoffProgressPercent, 100);
+
+  const highestRemainingDebt = activeDebts.map((debt) => {
+    const paidMinor = debt.originalAmountMinor - debt.remainingAmountMinor;
+
+    const progressPercent = debt.originalAmountMinor > zero
+    ? Number((paidMinor * oneHundred) / debt.originalAmountMinor)
+    : 0;
+
+    return {
+      id: debt.id,
+      name: debt.name,
+      currency: debt.currency,
+      remainingAmountMinor: debt.remainingAmountMinor,
+      originalAmountMinor: debt.originalAmountMinor,
+      progressPercent,
+    };
+  })
+  .sort((a, b) => {
+    if (a.remainingAmountMinor < b.remainingAmountMinor) return 1;
+    if (a.remainingAmountMinor > b.remainingAmountMinor) return -1;
+    return 0;
+  })[0];
 
   return (
     <div>
@@ -708,6 +805,117 @@ export default async function DashboardPage() {
                       nextSavingsGoal.currency
                     )}{" "}
                     remaining
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </section>
+
+    <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="font-semibold text-slate-900">Debt snapshot</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Quick view of what you owe and paid this month.
+          </p>
+        </div>
+
+        <Link
+          href="/debts"
+          className="text-sm font-medium text-emerald-600 hover:text-emerald-700"
+        >
+          View debts
+        </Link>
+      </div>
+
+      {debts.length === 0 ? (
+        <div className="mt-4 rounded-lg bg-slate-50 p-4">
+          <p className="text-sm text-slate-600">No debts tracked yet.</p>
+
+          <Link
+            href="/debts"
+            className="mt-2 inline-block text-sm font-medium text-emerald-600 hover:text-emerald-700"
+          >
+            Add a debt
+          </Link>
+        </div>
+      ) : (
+        <>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="rounded-lg bg-red-50 p-4">
+              <p className="text-sm text-red-700">Remaining debt</p>
+              <p className="mt-1 text-lg font-semibold text-red-700">
+                {formatMoneyFromMinorUnits(totalDebtRemainingMinor, currency)}
+              </p>
+              <p className="mt-1 text-xs text-red-700">
+                {activeDebts.length} active debt
+                {activeDebts.length === 1 ? "" : "s"}
+              </p>
+            </div>
+
+            <div className="rounded-lg bg-emerald-50 p-4">
+              <p className="text-sm text-emerald-700">Paid this month</p>
+              <p className="mt-1 text-lg font-semibold text-emerald-700">
+                {formatMoneyFromMinorUnits(debtPaymentsThisMonthMinor, currency)}
+              </p>
+              <p className="mt-1 text-xs text-emerald-700">
+                {debtPaymentsThisMonth.length} payment
+                {debtPaymentsThisMonth.length === 1 ? "" : "s"} recorded
+              </p>
+            </div>
+
+            <div className="rounded-lg bg-amber-50 p-4">
+              <p className="text-sm text-amber-700">Minimum payments</p>
+              <p className="mt-1 text-lg font-semibold text-amber-700">
+                {formatMoneyFromMinorUnits(minimumDebtPaymentsMinor, currency)}
+              </p>
+              <p className="mt-1 text-xs text-amber-700">
+                {paidOffDebts.length} paid off debt
+                {paidOffDebts.length === 1 ? "" : "s"}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-sm">
+              <p className="text-slate-600">Overall payoff progress</p>
+              <p className="font-medium text-slate-900">
+                {debtPayoffProgressPercent}%
+              </p>
+            </div>
+
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-emerald-600"
+                style={{ width: `${debtPayoffProgressWidth}%` }}
+              />
+            </div>
+          </div>
+
+          {highestRemainingDebt && (
+            <div className="mt-4 rounded-lg border border-slate-200 px-3 py-3">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-medium text-slate-900">
+                    Highest remaining debt
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    {highestRemainingDebt.name}
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-red-600">
+                    {formatMoneyFromMinorUnits(
+                      highestRemainingDebt.remainingAmountMinor,
+                      highestRemainingDebt.currency
+                    )}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {highestRemainingDebt.progressPercent}% paid
                   </p>
                 </div>
               </div>
