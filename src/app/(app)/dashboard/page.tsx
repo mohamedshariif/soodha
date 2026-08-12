@@ -3,19 +3,30 @@ import {
   addDaysUtc,
   formatDateForDisplay,
   formatMonthLabel,
-  getCurrentMonthInputValue,
+  //getCurrentMonthInputValue,
   getTodayDateInputValue,
+  isMonthInputValue,
   parseDateInputToTransactionDate,
   parseMonthInputToBudgetPeriod,
 } from "@/lib/date";
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
+import { MonthSelector } from "@/components/month-selector";
+import { TimeGreeting } from "@/components/time-greeting";
 import { prisma } from "@/lib/prisma";
 import { SummaryCard } from "@/components/summaryCard";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+type DashboardSearchParams = {
+  month?: string;
+};
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<DashboardSearchParams>;
+}) {
   const appUser = await getCurrentAppUser();
 
   if (!appUser) {
@@ -25,9 +36,19 @@ export default async function DashboardPage() {
   const zero = BigInt(0);
   const oneHundred = BigInt(100);
 
-  const currentMonthValue = getCurrentMonthInputValue();
+  /* const currentMonthValue = getCurrentMonthInputValue();
   const { periodStart, periodEnd } =
-    parseMonthInputToBudgetPeriod(currentMonthValue);
+    parseMonthInputToBudgetPeriod(currentMonthValue); */
+  const params = await searchParams;
+
+  const selectedMonthValue = isMonthInputValue(params.month)
+    ? params.month
+    : undefined;
+  const {
+    monthValue: currentMonthValue,
+    periodStart,
+    periodEnd,
+  } = parseMonthInputToBudgetPeriod(selectedMonthValue);
 
   const [
     account, 
@@ -413,15 +434,20 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+      <div className="flex flex-col gap-4 lg:hidden">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-          <p className="mt-2 text-slate-600">
-            Welcome to Soodha, {appUser.profile?.fullName}.
+          <h1 className="text-xl font-bold text-slate-900">
+            <TimeGreeting name={appUser.profile?.fullName ?? "there"} />
+          </h1>
+
+          <p className="mt-1 text-sm font-medium text-slate-500">
+            Here is your money overview
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <MonthSelector value={currentMonthValue}/>
+
+        {/* <div className="flex gap-2">
           <Link
             href="/income"
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
@@ -435,7 +461,7 @@ export default async function DashboardPage() {
           >
             Add expense
           </Link>
-        </div>
+        </div> */}
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
