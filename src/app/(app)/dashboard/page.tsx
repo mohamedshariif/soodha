@@ -10,12 +10,20 @@ import {
   parseMonthInputToBudgetPeriod,
 } from "@/lib/date";
 import { DashboardIncomeExpenseChart } from "@/components/finance-charts";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SectionCard } from "@/components/ui/section-card";
+import { SummaryCard } from "@/components/ui/summary-card";
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
 import { MonthSelector } from "@/components/month-selector";
 import { TimeGreeting } from "@/components/time-greeting";
+import {
+  TrendingDown,
+  TrendingUp,
+  WalletCards,
+} from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { SummaryCard } from "@/components/summaryCard";
+//import { SummaryCard } from "@/components/summaryCard";
 
 export const dynamic = "force-dynamic";
 
@@ -477,6 +485,35 @@ export default async function DashboardPage({
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <SummaryCard
+          icon={<TrendingUp className="h-5 w-5" />}
+          label="Income"
+          value={formatMoneyFromMinorUnits(incomeTotalMinor, currency)}
+          helper={`For ${formatMonthLabel(currentMonthValue)}`}
+          valueClassName="text-emerald-600"
+        />
+
+        <SummaryCard
+          icon={<TrendingDown className="h-5 w-5" />}
+          label="Expenses"
+          value={formatMoneyFromMinorUnits(expenseTotalMinor, currency)}
+          helper={`For ${formatMonthLabel(currentMonthValue)}`}
+          valueClassName="text-red-600"
+        />
+
+        <SummaryCard
+          icon={<WalletCards className="h-5 w-5" />}
+          label="Current balance"
+          value={
+            account
+              ? formatMoneyFromMinorUnits(account.currentBalanceMinor, account.currency)
+              : formatMoneyFromMinorUnits(BigInt(0), currency)
+          }
+          helper="Default account balance"
+        />
+      </div>
+
+      {/* <div className="mt-6 grid gap-4 md:grid-cols-3">
         <DashboardCard
           label="Income this month"
           value={formatMoneyFromMinorUnits(incomeTotalMinor, currency)}
@@ -494,9 +531,9 @@ export default async function DashboardPage({
           value={formatMoneyFromMinorUnits(balanceMinor, currency)}
           valueClassName="text-slate-900"
         />
-      </div>
+      </div> */}
 
-      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
+      {/* <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="font-semibold text-slate-900">Income vs expenses</h2>
@@ -512,7 +549,19 @@ export default async function DashboardPage({
             currency={currency}
           />
         </div>
-      </section>
+      </section> */}
+      <SectionCard
+        className="mt-6"
+        title="Income vs expenses"
+        description={`Quick comparison for ${formatMonthLabel(currentMonthValue)}.`}
+      >
+        <div className="mt-4 h-72">
+          <DashboardIncomeExpenseChart
+            data={dashboardIncomeExpenseChartData}
+            currency={currency}
+          />
+        </div>
+      </SectionCard>
 
       <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
         <div className="flex items-start justify-between gap-4">
