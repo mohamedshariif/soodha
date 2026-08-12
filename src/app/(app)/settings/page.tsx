@@ -217,10 +217,16 @@ export default async function SettingsPage() {
               </p>
             </div>
           </div>
+          <Link
+            href="/accounts"
+            className="mt-4 inline-block text-sm font-medium text-emerald-600 hover:text-emerald-700"
+          >
+              Manage accounts
+          </Link>
 
           <p className="mt-3 text-xs text-slate-500">
-            Full account management will come next: cash, bank, card, mobile
-            money, and setting a default account.
+            The default account is used by new income, expenses, bills, savings, and debt
+            payments.
           </p>
         </section>
 

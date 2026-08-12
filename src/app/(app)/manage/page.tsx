@@ -7,6 +7,8 @@ import {
   Calendar,
   HandCoins,
   CreditCard,
+  Wallet,
+  ReceiptText,
 } from "lucide-react";
 
 type ManageItems = {
@@ -17,6 +19,12 @@ type ManageItems = {
 }
 
 const manageItems: ManageItems[] = [
+  {
+    href: "/accounts",
+    title: "Accounts",
+    description: "Manage cash, bank, card, and mobile money balances.",
+    icon: Wallet,
+  },
   {
     href: "/income",
     title: "Income",
@@ -57,6 +65,7 @@ const manageItems: ManageItems[] = [
     href: "/reports",
     title: "Reports",
     description: "Review monthly income, expenses, and money movement.",
+    icon: ReceiptText,
   },
 ];
 
