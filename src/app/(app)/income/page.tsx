@@ -4,11 +4,16 @@ import { formatMoneyFromMinorUnits } from "@/lib/money";
 import { formatDateForDisplay } from "@/lib/date";
 import { getTodayDateInputValue } from "@/lib/date";
 import { AddIncomeModal } from "./add-income-modal";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export default async function IncomePage() {
+export default function IncomePage() {
+  redirect("/transactions?type=INCOME");
+}
+
+/* export default async function IncomePage() {
   const appUser = await getCurrentAppUser();
 
   const [incomeCategories, recentIncome, accounts] = await Promise.all([
@@ -48,23 +53,6 @@ export default async function IncomePage() {
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
   }),
 ]);
-
-  /* const recentIncome = await prisma.transaction.findMany({
-    where: {
-      userId: appUser?.id,
-      type: "INCOME",
-      status: "ACTIVE",
-      deletedAt: null,
-    },
-    include: {
-      category: true,
-      account: true,
-    },
-    orderBy: {
-      transactionDate: "desc",
-    },
-    take: 5,
-  }); */
 
   const today = getTodayDateInputValue();
 
@@ -125,4 +113,4 @@ export default async function IncomePage() {
       </section>
     </div>
   );
-}
+} */

@@ -4,11 +4,17 @@ import { formatMoneyFromMinorUnits } from "@/lib/money";
 import { formatDateForDisplay } from "@/lib/date";
 import { getTodayDateInputValue } from "@/lib/date";
 import { AddExpenseModal } from "./add-expense-modal";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export default async function ExpensesPage() {
+
+export default function ExpensesPage() {
+  redirect("/transactions?type=EXPENSE");
+}
+
+/* export default async function ExpensesPage() {
   const appUser = await getCurrentAppUser();
 
   const [expenseCategories, recentExpenses, accounts] = await Promise.all([
@@ -110,4 +116,4 @@ export default async function ExpensesPage() {
       </section>
     </div>
   );
-}
+} */

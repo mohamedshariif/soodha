@@ -7,31 +7,28 @@ import {
   BarChart3,
   CreditCard,
   LayoutDashboard,
-  HandCoins,
-  PieChart,
+  PiggyBank,
   Receipt,
-  Calendar,
   Settings,
-  TrendingDown,
-  TrendingUp,
-} from "lucide-react"
+  Target,
+  WalletCards,
+} from "lucide-react";
 
-type NavItems = {
+type NavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
-}
+};
 
-const navItems: NavItems[] = [
+const navItems: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/income", label: "Income", icon: TrendingUp },
-  { href: "/expenses", label: "Expenses", icon: TrendingDown },
-  { href: "/transactions", label: "Transactions", icon: Receipt },
-  { href: "/budgets", label: "Budgets", icon: PieChart },
-  { href: "/bills", label: "Bills", icon: Calendar },
-  { href: "/savings", label: "Savings", icon: HandCoins },
+  { href: "/transactions", label: "Transactions", icon: WalletCards },
+  { href: "/budgets", label: "Budgets", icon: Target },
+  { href: "/bills", label: "Bills", icon: Receipt },
+  { href: "/savings", label: "Savings", icon: PiggyBank },
   { href: "/debts", label: "Debts", icon: CreditCard },
   { href: "/reports", label: "Reports", icon: BarChart3 },
+  { href: "/accounts", label: "Accounts", icon: WalletCards },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -56,13 +53,13 @@ export function AppSidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition ${
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
                 isActive
-                  ? "bg-slate-100 text-green-700"
-                  : "text-slate-700 hover:bg-slate-100 hover:text-green-700"
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
               }`}
             >
-              <Icon className="h-5 w-5 shrink-0" />
+              <Icon className="h-4 w-4 shrink-0" />
               <span>{item.label}</span>
             </Link>
           );

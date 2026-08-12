@@ -17,6 +17,10 @@ import { getCurrentAppUser } from "@/lib/current-app-user";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
 import { MonthSelector } from "@/components/month-selector";
 import { TimeGreeting } from "@/components/time-greeting";
+
+import { AddExpenseModal } from "@/components/transactions/add-expense-modal";
+import { AddIncomeModal } from "@/components/transactions/add-income-modal";
+
 import {
   TrendingDown,
   TrendingUp,
@@ -62,6 +66,8 @@ export default async function DashboardPage({
   const [
     account,
     accounts,
+    incomeCategories,
+    expenseCategories,
     incomeTotal, 
     expenseTotal, 
     recentTransactions, 
@@ -89,6 +95,26 @@ export default async function DashboardPage({
           deletedAt: null,
         },
         orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+      }),
+
+      prisma.category.findMany({
+        where: {
+          userId: appUser.id,
+          type: "INCOME",
+          status: "ACTIVE",
+          deletedAt: null,
+        },
+        orderBy: [{ isDefault: "desc" }, { name: "asc" }],
+      }),
+
+      prisma.category.findMany({
+        where: {
+          userId: appUser.id,
+          type: "EXPENSE",
+          status: "ACTIVE",
+          deletedAt: null,
+        },
+        orderBy: [{ isDefault: "desc" }, { name: "asc" }],
       }),
 
       prisma.transaction.aggregate({
@@ -485,21 +511,48 @@ export default async function DashboardPage({
 
         <MonthSelector value={currentMonthValue}/>
 
-        {/* <div className="flex gap-2">
-          <Link
-            href="/income"
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
-          >
-            Add income
-          </Link>
+        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+            <div>
+              <h2 className="font-semibold text-slate-900">Quick actions</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Quickly record income or expenses without leaving the dashboard.
+              </p>
+            </div>
 
-          <Link
-            href="/expenses"
-            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-          >
-            Add expense
-          </Link>
-        </div> */}
+            <div className="flex flex-wrap gap-2">
+              <AddIncomeModal
+                incomeCategories={incomeCategories.map((category) => ({
+                  id: category.id,
+                  name: category.name,
+                }))}
+                accounts={accounts.map((account) => ({
+                  id: account.id,
+                  name: account.name,
+                  type: account.type,
+                  currency: account.currency,
+                  isDefault: account.isDefault,
+                }))}
+                today={todayInputValue}
+              />
+
+              <AddExpenseModal
+                expenseCategories={expenseCategories.map((category) => ({
+                  id: category.id,
+                  name: category.name,
+                }))}
+                accounts={accounts.map((account) => ({
+                  id: account.id,
+                  name: account.name,
+                  type: account.type,
+                  currency: account.currency,
+                  isDefault: account.isDefault,
+                }))}
+                today={todayInputValue}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">

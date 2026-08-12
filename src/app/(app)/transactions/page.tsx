@@ -1,7 +1,13 @@
 import Link from "next/link";
+import { AddExpenseModal } from "@/components/transactions/add-expense-modal";
+import { AddIncomeModal } from "@/components/transactions/add-income-modal";
 import { cancelTransaction } from "./actions";
 import { TransactionsFilterForm } from "./transactions-filter-form";
-import { formatDateForDisplay, parseDateInputToTransactionDate } from "@/lib/date";
+import {
+  formatDateForDisplay,
+  getTodayDateInputValue,
+  parseDateInputToTransactionDate,
+} from "@/lib/date";
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
@@ -51,6 +57,7 @@ export default async function TransactionsPage({
   }
 
   const filters = await searchParams;
+  const today = getTodayDateInputValue();
 
   const selectedType: TransactionFilterType | "" = isTransactionType(
     filters.type
@@ -63,7 +70,7 @@ export default async function TransactionsPage({
   const to = isDateInput(filters.to) ? filters.to! : "";
   const selectedCategoryId = filters.categoryId ?? "";
 
-  const [account, categories] = await Promise.all([
+  const [account, accounts, categories] = await Promise.all([
     prisma.account.findFirst({
       where: {
         userId: appUser.id,
@@ -71,6 +78,15 @@ export default async function TransactionsPage({
         status: "ACTIVE",
         deletedAt: null,
       },
+    }),
+
+    prisma.account.findMany({
+      where: {
+        userId: appUser.id,
+        status: "ACTIVE",
+        deletedAt: null,
+      },
+      orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
     }),
 
     prisma.category.findMany({
@@ -158,30 +174,50 @@ export default async function TransactionsPage({
     take: 50,
   });
 
+  const incomeCategories = categories
+    .filter((category) => category.type === "INCOME")
+    .map((category) => ({
+      id: category.id,
+      name: category.name,
+    }));
+
+  const expenseCategories = categories
+    .filter((category) => category.type === "EXPENSE")
+    .map((category) => ({
+      id: category.id,
+      name: category.name,
+    }));
+
+  const accountOptions = accounts.map((account) => ({
+    id: account.id,
+    name: account.name,
+    type: account.type,
+    currency: account.currency,
+    isDefault: account.isDefault,
+  }));
+
   return (
     <div>
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Transactions</h1>
           <p className="mt-2 text-slate-600">
-            View, filter, edit, and manage your money records.
+            Add, view, filter, edit, and manage your money records.
           </p>
         </div>
 
-        <div className="flex gap-2">
-          <Link
-            href="/income"
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
-          >
-            Add income
-          </Link>
+        <div className="flex flex-wrap gap-2">
+          <AddIncomeModal
+            incomeCategories={incomeCategories}
+            accounts={accountOptions}
+            today={today}
+          />
 
-          <Link
-            href="/expenses"
-            className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-          >
-            Add expense
-          </Link>
+          <AddExpenseModal
+            expenseCategories={expenseCategories}
+            accounts={accountOptions}
+            today={today}
+          />
         </div>
       </div>
 
