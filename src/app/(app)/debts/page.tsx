@@ -8,6 +8,13 @@ import {
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
+import { 
+  Archive,
+  CalendarDays,
+  CheckCircle2,
+  CircleAlert,
+  CreditCard,
+} from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -91,7 +98,12 @@ export default async function DebtsPage() {
     <div>
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Debts</h1>
+          <div className="flex items-center gap-3">
+            <div className="rounded-xl bg-red-50 p-2 text-red-600">
+              <CreditCard className="h-5 w-5"/>
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900">Debts</h1>
+          </div>
           <p className="mt-2 text-slate-600">
             Track money you owe and record payments over time.
           </p>
@@ -102,6 +114,7 @@ export default async function DebtsPage() {
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
         <DebtSummaryCard
+          icon={<CircleAlert className="h-5 w-5"/>}
           label="Remaining debt"
           value={formatMoneyFromMinorUnits(totalRemainingMinor, currency)}
           helper={`${activeDebts.length} active debt${
@@ -113,6 +126,7 @@ export default async function DebtsPage() {
         />
 
         <DebtSummaryCard
+          icon={<CheckCircle2 className="h-5 w-5"/>}
           label="Paid so far"
           value={formatMoneyFromMinorUnits(totalPaidMinor, currency)}
           helper={`${payoffProgressPercent}% paid off`}
@@ -120,6 +134,7 @@ export default async function DebtsPage() {
         />
 
         <DebtSummaryCard
+          icon={<CalendarDays className="h-5 w-5"/>}
           label="Minimum payments"
           value={formatMoneyFromMinorUnits(minimumPaymentsMinor, currency)}
           helper="Monthly minimums for active debts"
@@ -424,11 +439,13 @@ function DebtCard({
 }
 
 function DebtSummaryCard({
+  icon,
   label,
   value,
   helper,
   valueClassName = "text-slate-900",
 }: {
+  icon: React.ReactNode;
   label: string;
   value: string;
   helper: string;
@@ -436,9 +453,21 @@ function DebtSummaryCard({
 }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5">
-      <p className="text-sm text-slate-500">{label}</p>
-      <p className={`mt-2 text-2xl font-bold ${valueClassName}`}>{value}</p>
-      <p className="mt-1 text-xs text-slate-500">{helper}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm text-slate-500">{label}</p>
+          <p className={`mt-2 text-2xl font-bold ${valueClassName}`}>
+            {value}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">{helper}</p>
+        </div>
+
+        {icon && (
+          <div className="rounded-lg bg-slate-50 p-2 text-slate-500">
+            {icon}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

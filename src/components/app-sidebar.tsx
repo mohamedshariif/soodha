@@ -2,18 +2,37 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
+import {
+  BarChart3,
+  CreditCard,
+  LayoutDashboard,
+  HandCoins,
+  PieChart,
+  Receipt,
+  Calendar,
+  Settings,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react"
 
-const navItems = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/income", label: "Income" },
-  { href: "/expenses", label: "Expenses" },
-  { href: "/transactions", label: "Transactions" },
-  { href: "/budgets", label: "Budgets" },
-  { href: "/bills", label: "Bills" },
-  { href: "/savings", label: "Savings" },
-  { href: "/debts", label: "Debts" },
-  { href: "/reports", label: "Reports" },
-  { href: "/settings", label: "Settings" },
+type NavItems = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+}
+
+const navItems: NavItems[] = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/income", label: "Income", icon: TrendingUp },
+  { href: "/expenses", label: "Expenses", icon: TrendingDown },
+  { href: "/transactions", label: "Transactions", icon: Receipt },
+  { href: "/budgets", label: "Budgets", icon: PieChart },
+  { href: "/bills", label: "Bills", icon: Calendar },
+  { href: "/savings", label: "Savings", icon: HandCoins },
+  { href: "/debts", label: "Debts", icon: CreditCard },
+  { href: "/reports", label: "Reports", icon: BarChart3 },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -28,6 +47,8 @@ export function AppSidebar() {
 
       <nav className="flex-1 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
+          const Icon = item.icon;
+
           const isActive =
             pathname === item.href || pathname.startsWith(`${item.href}/`);
 
@@ -35,13 +56,14 @@ export function AppSidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`block rounded-lg px-3 py-2 text-sm font-medium transition ${
+              className={`flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition ${
                 isActive
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  ? "bg-slate-100 text-green-700"
+                  : "text-slate-700 hover:bg-slate-100 hover:text-green-700"
               }`}
             >
-              {item.label}
+              <Icon className="h-5 w-5 shrink-0" />
+              <span>{item.label}</span>
             </Link>
           );
         })}
