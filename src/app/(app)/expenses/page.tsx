@@ -3,6 +3,7 @@ import { getCurrentAppUser } from "@/lib/current-app-user";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
 import { formatDateForDisplay } from "@/lib/date";
 import { getTodayDateInputValue } from "@/lib/date";
+import { AddExpenseModal } from "./add-expense-modal";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -10,19 +11,20 @@ export const dynamic = "force-dynamic";
 export default async function ExpensesPage() {
   const appUser = await getCurrentAppUser();
 
-  const expenseCategories = await prisma.category.findMany({
+  const [expenseCategories, recentExpenses, accounts] = await Promise.all([
+  prisma.category.findMany({
     where: {
-      userId: appUser?.id,
+      userId: appUser.id,
       type: "EXPENSE",
       status: "ACTIVE",
       deletedAt: null,
     },
     orderBy: [{ isDefault: "desc" }, { name: "asc" }],
-  });
+  }),
 
-  const recentExpenses = await prisma.transaction.findMany({
+  prisma.transaction.findMany({
     where: {
-      userId: appUser?.id,
+      userId: appUser.id,
       type: "EXPENSE",
       status: "ACTIVE",
       deletedAt: null,
@@ -34,8 +36,19 @@ export default async function ExpensesPage() {
     orderBy: {
       transactionDate: "desc",
     },
-    take: 5,
-  });
+    take: 10,
+  }),
+
+  prisma.account.findMany({
+    where: {
+      userId: appUser.id,
+      status: "ACTIVE",
+      deletedAt: null,
+    },
+    orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+  }),
+]);
+
 
   const today = getTodayDateInputValue();
 
@@ -46,84 +59,20 @@ export default async function ExpensesPage() {
         Add and track money going out of your account.
       </p>
 
-      <form
-        action={createExpense}
-        className="mt-6 rounded-xl border border-slate-200 bg-white p-5"
-      >
-        <h2 className="font-semibold text-slate-900">Add expense</h2>
-
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="text-sm font-medium text-slate-700">
-              Amount
-            </label>
-            <input
-              name="amount"
-              placeholder="25.00"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-slate-700">
-              Category
-            </label>
-            <select
-              name="categoryId"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-              required
-            >
-              <option value="">Select category</option>
-              {expenseCategories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-slate-700">
-              Date
-            </label>
-            <input
-              type="date"
-              name="transactionDate"
-              defaultValue={today}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-slate-700">
-              Description
-            </label>
-            <input
-              name="description"
-              placeholder="e.g. Lunch"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-              required
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="text-sm font-medium text-slate-700">
-              Note
-            </label>
-            <textarea
-              name="note"
-              placeholder="Optional note"
-              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-              rows={3}
-            />
-          </div>
-        </div>
-
-        <button className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
-          Save expense
-        </button>
-      </form>
+      <AddExpenseModal
+        expenseCategories={expenseCategories.map((category) => ({
+          id: category.id,
+          name: category.name,
+        }))}
+        accounts={accounts.map((account) => ({
+          id: account.id,
+          name: account.name,
+          type: account.type,
+          currency: account.currency,
+          isDefault: account.isDefault,
+        }))}
+        today={today}
+      />
 
       <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
         <h2 className="font-semibold text-slate-900">Recent expenses</h2>
