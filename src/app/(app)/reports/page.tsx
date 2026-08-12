@@ -3,6 +3,9 @@ import {
   ManagedMovementBarChart,
   MonthlyCashFlowChart,
 } from "@/components/finance-charts";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SectionCard } from "@/components/ui/section-card";
+import { SummaryCard } from "@/components/ui/summary-card";
 import { MonthSelector } from "@/components/month-selector";
 import {
   formatDateForDisplay,
@@ -261,7 +264,7 @@ export default async function ReportsPage({
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <ReportSummaryCard
+        <SummaryCard
           label="Income"
           value={formatMoneyFromMinorUnits(incomeTotalMinor, currency)}
           helper={`${incomeTransactions.length} income record${
@@ -270,7 +273,7 @@ export default async function ReportsPage({
           valueClassName="text-emerald-600"
         />
 
-        <ReportSummaryCard
+        <SummaryCard
           label="Expenses"
           value={formatMoneyFromMinorUnits(expenseTotalMinor, currency)}
           helper={`${expenseTransactions.length} expense record${
@@ -279,7 +282,7 @@ export default async function ReportsPage({
           valueClassName="text-red-600"
         />
 
-        <ReportSummaryCard
+        <SummaryCard
           label="Net after expenses"
           value={formatMoneyFromMinorUnits(netAfterExpensesMinor, currency)}
           helper="Income minus expenses"
@@ -288,7 +291,7 @@ export default async function ReportsPage({
           }
         />
 
-        <ReportSummaryCard
+        <SummaryCard
           label="Available cash change"
           value={formatMoneyFromMinorUnits(availableCashChangeMinor, currency)}
           helper="Income minus expenses and savings"
@@ -298,7 +301,20 @@ export default async function ReportsPage({
         />
       </div>
 
-      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
+      <SectionCard
+        className="mt-6"
+        title="Daily income vs expenses"
+        description={`Daily cash flow for ${formatMonthLabel(currentMonthValue)}.`}
+        meta={`${transactions.length} total record${
+          transactions.length === 1 ? "" : "s"
+        }`}
+      >
+        <div className="mt-5 h-80">
+          <MonthlyCashFlowChart data={dailyCashFlowData} currency={currency} />
+        </div>
+      </SectionCard>
+
+      {/* <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
         <div className="flex flex-col justify-between gap-2 md:flex-row md:items-center">
           <div>
             <h2 className="font-semibold text-slate-900">
@@ -318,7 +334,7 @@ export default async function ReportsPage({
         <div className="mt-5 h-80">
           <MonthlyCashFlowChart data={dailyCashFlowData} currency={currency} />
         </div>
-      </section>
+      </section> */}
 
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
         <section className="rounded-xl border border-slate-200 bg-white p-5">
@@ -341,11 +357,7 @@ export default async function ReportsPage({
 
           <div className="mt-4 space-y-3">
             {topExpenseCategories.length === 0 ? (
-              <div className="rounded-lg bg-slate-50 p-4">
-                <p className="text-sm text-slate-600">
-                  No expenses recorded for this month.
-                </p>
-              </div>
+              <EmptyState description="No expenses recorded for this month."/>
             ) : (
               topExpenseCategories.map((category) => (
                 <div
@@ -429,11 +441,7 @@ export default async function ReportsPage({
 
         <div className="mt-4 space-y-2">
           {transactions.length === 0 ? (
-            <div className="rounded-lg bg-slate-50 p-4">
-              <p className="text-sm text-slate-600">
-                No records found for this month.
-              </p>
-            </div>
+            <EmptyState description="No records found for this month." />
           ) : (
             transactions.slice(0, 8).map((transaction) => {
               const isIncome = transaction.type === "INCOME";
@@ -491,7 +499,7 @@ export default async function ReportsPage({
   );
 }
 
-function ReportSummaryCard({
+/* function ReportSummaryCard({
   label,
   value,
   helper,
@@ -509,7 +517,7 @@ function ReportSummaryCard({
       <p className="mt-1 text-xs text-slate-500">{helper}</p>
     </div>
   );
-}
+} */
 
 function ManagedMovementRow({
   label,
