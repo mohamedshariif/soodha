@@ -44,14 +44,20 @@ function addMonths(monthValue: string, amount: number) {
   return `${nextYear}-${nextMonth}`;
 }
 
-function getMonthOptions(selectedMonth: string) {
-  const baseMonth = isMonthValue(selectedMonth)
-    ? selectedMonth
-    : getCurrentMonthValue();
+function isAfterMonth(monthValue: string, compareMonthValue: string) {
+  return monthValue > compareMonthValue;
+}
 
-  return Array.from({ length: 25 }, (_, index) => {
-    const offset = index - 12;
-    const value = addMonths(baseMonth, offset);
+function getMonthOptions(selectedMonth: string, allowFuture: boolean) {
+  const currentMonth = getCurrentMonthValue();
+
+  const baseMonth =
+    allowFuture || !isAfterMonth(selectedMonth, currentMonth)
+      ? selectedMonth
+      : currentMonth;
+
+  return Array.from({ length: 24 }, (_, index) => {
+    const value = addMonths(baseMonth, -index);
 
     return {
       value,
@@ -60,7 +66,13 @@ function getMonthOptions(selectedMonth: string) {
   });
 }
 
-export function MonthSelector({ value }: { value: string }) {
+export function MonthSelector({
+  value,
+  allowFuture = false,
+}: {
+  value: string;
+  allowFuture?: boolean;
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -68,10 +80,19 @@ export function MonthSelector({ value }: { value: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const selectedValue = isMonthValue(value) ? value : getCurrentMonthValue();
-  const monthOptions = getMonthOptions(selectedValue);
+  const currentMonth = getCurrentMonthValue();
+  const selectedValue = isMonthValue(value) ? value : currentMonth;
+
+  const monthOptions = getMonthOptions(selectedValue, allowFuture);
+
+  const isNextDisabled =
+    !allowFuture && !isAfterMonth(currentMonth, selectedValue);
 
   function changeMonth(nextValue: string) {
+    if (!allowFuture && isAfterMonth(nextValue, currentMonth)) {
+      return;
+    }
+
     const params = new URLSearchParams(searchParams.toString());
 
     params.set("month", nextValue);
@@ -155,7 +176,8 @@ export function MonthSelector({ value }: { value: string }) {
       <button
         type="button"
         onClick={() => changeMonth(addMonths(selectedValue, 1))}
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-300 hover:text-emerald-700"
+        disabled={isNextDisabled}
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-300 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-slate-200 disabled:hover:text-slate-600"
         aria-label="Next month"
       >
         <ChevronRight className="h-4 w-4" />

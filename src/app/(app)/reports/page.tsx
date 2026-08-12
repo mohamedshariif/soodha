@@ -1,3 +1,8 @@
+import {
+  ExpenseCategoryDonutChart,
+  ManagedMovementBarChart,
+  MonthlyCashFlowChart,
+} from "@/components/finance-charts";
 import { MonthSelector } from "@/components/month-selector";
 import {
   formatDateForDisplay,
@@ -5,11 +10,6 @@ import {
   isMonthInputValue,
   parseMonthInputToBudgetPeriod,
 } from "@/lib/date";
-import {
-  ExpenseCategoryDonutChart,
-  ManagedMovementBarChart,
-  MonthlyCashFlowChart,
-} from "@/components/finance-charts";
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
@@ -18,6 +18,13 @@ export const dynamic = "force-dynamic";
 
 type ReportsSearchParams = {
   month?: string;
+};
+
+type ReportTransaction = {
+  sourceType: string;
+  category: {
+    name: string;
+  } | null;
 };
 
 function getManagedSourceLabel(sourceType: string) {
@@ -35,10 +42,7 @@ function getManagedSourceLabel(sourceType: string) {
   }
 }
 
-function getCategoryReportName(transaction: {
-  sourceType: string;
-  category: { name: string } | null;
-}) {
+function getCategoryReportName(transaction: ReportTransaction) {
   if (transaction.category?.name) {
     return transaction.category.name;
   }
@@ -50,14 +54,6 @@ function compareBigIntDesc(a: bigint, b: bigint) {
   if (a < b) return 1;
   if (a > b) return -1;
   return 0;
-}
-
-function getPercent(part: bigint, total: bigint) {
-  if (total <= BigInt(0)) {
-    return 0;
-  }
-
-  return Number((part * BigInt(100)) / total);
 }
 
 export default async function ReportsPage({
@@ -191,66 +187,56 @@ export default async function ReportsPage({
     .sort((a, b) => compareBigIntDesc(a.amountMinor, b.amountMinor))
     .slice(0, 5);
 
-  const highestExpenseCategoryMinor =
-    topExpenseCategories[0]?.amountMinor ?? zero;
-
-  const incomeExpenseMaxMinor =
-    incomeTotalMinor > expenseTotalMinor ? incomeTotalMinor : expenseTotalMinor;
-
-  const incomeBarWidth = getPercent(incomeTotalMinor, incomeExpenseMaxMinor);
-  const expenseBarWidth = getPercent(expenseTotalMinor, incomeExpenseMaxMinor);
-
-  const cashChangeIsPositive = availableCashChangeMinor >= zero;
-  const netAfterExpensesIsPositive = netAfterExpensesMinor >= zero;
-
-  // Here
   const daysInSelectedMonth = periodEnd.getUTCDate();
 
-const dailyCashFlowData = Array.from(
-  { length: daysInSelectedMonth },
-  (_, index) => ({
-    day: String(index + 1),
-    income: 0,
-    expenses: 0,
-  })
-);
+  const dailyCashFlowData = Array.from(
+    { length: daysInSelectedMonth },
+    (_, index) => ({
+      day: String(index + 1),
+      income: 0,
+      expenses: 0,
+    })
+  );
 
-for (const transaction of transactions) {
-  const dayIndex = transaction.transactionDate.getUTCDate() - 1;
+  for (const transaction of transactions) {
+    const dayIndex = transaction.transactionDate.getUTCDate() - 1;
 
-  if (!dailyCashFlowData[dayIndex]) {
-    continue;
+    if (!dailyCashFlowData[dayIndex]) {
+      continue;
+    }
+
+    if (transaction.type === "INCOME") {
+      dailyCashFlowData[dayIndex].income += Number(transaction.amountMinor) / 100;
+    }
+
+    if (transaction.type === "EXPENSE") {
+      dailyCashFlowData[dayIndex].expenses +=
+        Number(transaction.amountMinor) / 100;
+    }
   }
 
-  if (transaction.type === "INCOME") {
-    dailyCashFlowData[dayIndex].income += Number(transaction.amountMinor) / 100;
-  }
+  const expenseCategoryChartData = topExpenseCategories.map((category) => ({
+    name: category.name,
+    amount: Number(category.amountMinor) / 100,
+  }));
 
-  if (transaction.type === "EXPENSE") {
-    dailyCashFlowData[dayIndex].expenses +=
-      Number(transaction.amountMinor) / 100;
-  }
-}
+  const managedMovementChartData = [
+    {
+      name: "Bills",
+      amount: Number(billPaymentTotalMinor) / 100,
+    },
+    {
+      name: "Savings",
+      amount: Number(savingsContributionTotalMinor) / 100,
+    },
+    {
+      name: "Debts",
+      amount: Number(debtPaymentTotalMinor) / 100,
+    },
+  ];
 
-const expenseCategoryChartData = topExpenseCategories.map((category) => ({
-  name: category.name,
-  amount: Number(category.amountMinor) / 100,
-}));
-
-const managedMovementChartData = [
-  {
-    name: "Bills",
-    amount: Number(billPaymentTotalMinor) / 100,
-  },
-  {
-    name: "Savings",
-    amount: Number(savingsContributionTotalMinor) / 100,
-  },
-  {
-    name: "Debts",
-    amount: Number(debtPaymentTotalMinor) / 100,
-  },
-];
+  const netAfterExpensesIsPositive = netAfterExpensesMinor >= zero;
+  const cashChangeIsPositive = availableCashChangeMinor >= zero;
 
   return (
     <div>
@@ -316,10 +302,10 @@ const managedMovementChartData = [
         <div className="flex flex-col justify-between gap-2 md:flex-row md:items-center">
           <div>
             <h2 className="font-semibold text-slate-900">
-              Income vs expenses
+              Daily income vs expenses
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Simple comparison for {formatMonthLabel(currentMonthValue)}.
+              Daily cash flow for {formatMonthLabel(currentMonthValue)}.
             </p>
           </div>
 
@@ -332,39 +318,25 @@ const managedMovementChartData = [
         <div className="mt-5 h-80">
           <MonthlyCashFlowChart data={dailyCashFlowData} currency={currency} />
         </div>
-
-        <div className="mt-5 space-y-4">
-          <ReportBar
-            label="Income"
-            value={formatMoneyFromMinorUnits(incomeTotalMinor, currency)}
-            width={incomeBarWidth}
-            barClassName="bg-emerald-600"
-          />
-
-          <ReportBar
-            label="Expenses"
-            value={formatMoneyFromMinorUnits(expenseTotalMinor, currency)}
-            width={expenseBarWidth}
-            barClassName="bg-red-600"
-          />
-        </div>
       </section>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
-       <div className="mt-4 h-72">
-        <ExpenseCategoryDonutChart
-          data={expenseCategoryChartData}
-          currency={currency}
-        />
-      </div>
         <section className="rounded-xl border border-slate-200 bg-white p-5">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-slate-900">
               Top expense categories
             </h2>
+
             <p className="text-sm text-slate-500">
               Top {topExpenseCategories.length}
             </p>
+          </div>
+
+          <div className="mt-4 h-72">
+            <ExpenseCategoryDonutChart
+              data={expenseCategoryChartData}
+              currency={currency}
+            />
           </div>
 
           <div className="mt-4 space-y-3">
@@ -375,42 +347,26 @@ const managedMovementChartData = [
                 </p>
               </div>
             ) : (
-              topExpenseCategories.map((category) => {
-                const width = getPercent(
-                  category.amountMinor,
-                  highestExpenseCategoryMinor
-                );
-
-                return (
-                  <div key={category.name}>
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">
-                          {category.name}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {category.count} record
-                          {category.count === 1 ? "" : "s"}
-                        </p>
-                      </div>
-
-                      <p className="text-sm font-semibold text-slate-900">
-                        {formatMoneyFromMinorUnits(
-                          category.amountMinor,
-                          currency
-                        )}
-                      </p>
-                    </div>
-
-                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
-                      <div
-                        className="h-full rounded-full bg-red-500"
-                        style={{ width: `${width}%` }}
-                      />
-                    </div>
+              topExpenseCategories.map((category) => (
+                <div
+                  key={category.name}
+                  className="flex items-center justify-between gap-4 rounded-lg bg-slate-50 p-3"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">
+                      {category.name}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {category.count} record
+                      {category.count === 1 ? "" : "s"}
+                    </p>
                   </div>
-                );
-              })
+
+                  <p className="text-sm font-semibold text-slate-900">
+                    {formatMoneyFromMinorUnits(category.amountMinor, currency)}
+                  </p>
+                </div>
+              ))
             )}
           </div>
         </section>
@@ -551,34 +507,6 @@ function ReportSummaryCard({
       <p className="text-sm text-slate-500">{label}</p>
       <p className={`mt-2 text-2xl font-bold ${valueClassName}`}>{value}</p>
       <p className="mt-1 text-xs text-slate-500">{helper}</p>
-    </div>
-  );
-}
-
-function ReportBar({
-  label,
-  value,
-  width,
-  barClassName,
-}: {
-  label: string;
-  value: string;
-  width: number;
-  barClassName: string;
-}) {
-  return (
-    <div>
-      <div className="flex items-center justify-between text-sm">
-        <p className="font-medium text-slate-700">{label}</p>
-        <p className="font-semibold text-slate-900">{value}</p>
-      </div>
-
-      <div className="mt-2 h-3 overflow-hidden rounded-full bg-slate-100">
-        <div
-          className={`h-full rounded-full ${barClassName}`}
-          style={{ width: `${width}%` }}
-        />
-      </div>
     </div>
   );
 }
