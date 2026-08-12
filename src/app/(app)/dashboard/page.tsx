@@ -60,7 +60,8 @@ export default async function DashboardPage({
   } = parseMonthInputToBudgetPeriod(selectedMonthValue);
 
   const [
-    account, 
+    account,
+    accounts,
     incomeTotal, 
     expenseTotal, 
     recentTransactions, 
@@ -79,6 +80,15 @@ export default async function DashboardPage({
           status: "ACTIVE",
           deletedAt: null,
         },
+      }),
+
+      prisma.account.findMany({
+        where: {
+          userId: appUser.id,
+          status: "ACTIVE",
+          deletedAt: null,
+        },
+        orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
       }),
 
       prisma.transaction.aggregate({
@@ -245,13 +255,21 @@ export default async function DashboardPage({
   const incomeTotalMinor = incomeTotal._sum.amountMinor ?? zero;
   const expenseTotalMinor = expenseTotal._sum.amountMinor ?? zero;
   const balanceMinor = account?.currentBalanceMinor ?? zero;
+
   const currency = 
-    account?.currency ?? 
+    account?.currency ??
+    accounts[0]?.currency ??
     budgets[0]?.currency ??
     activeBills[0]?.currency ??
     savingsGoals[0]?.currency ??
     debts[0]?.currency ?? 
     "USD";
+  
+  const totalAccountBalanceMinor = accounts.reduce((total, account) => {
+    return total + account.currentBalanceMinor;
+  }, zero);
+
+  const defaultAccountName = account?.name ?? accounts[0]?.name ?? "No default account";
 
   const dashboardIncomeExpenseChartData = [
     {
@@ -503,13 +521,14 @@ export default async function DashboardPage({
 
         <SummaryCard
           icon={<WalletCards className="h-5 w-5" />}
-          label="Current balance"
-          value={
-            account
-              ? formatMoneyFromMinorUnits(account.currentBalanceMinor, account.currency)
-              : formatMoneyFromMinorUnits(BigInt(0), currency)
+          label="Total balance"
+          value={formatMoneyFromMinorUnits(totalAccountBalanceMinor, currency)}
+          helper={`${accounts.length} active account${
+            accounts.length === 1 ? "" : "s"
+          } · Default: ${defaultAccountName}`}
+          valueClassName={
+            totalAccountBalanceMinor >= zero ? "text-slate-900" : "text-red-600"
           }
-          helper="Default account balance"
         />
       </div>
 
@@ -562,6 +581,71 @@ export default async function DashboardPage({
           />
         </div>
       </SectionCard>
+
+      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="font-semibold text-slate-900">Accounts snapshot</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Balance across your active accounts.
+            </p>
+          </div>
+
+          <Link
+            href="/accounts"
+            className="text-sm font-medium text-emerald-600 hover:text-emerald-700"
+          >
+            View accounts
+          </Link>
+        </div>
+
+        <div className="mt-4 space-y-2">
+          {accounts.slice(0, 3).map((account) => (
+            <div
+              key={account.id}
+              className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-3"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-slate-900">
+                    {account.name}
+                  </p>
+
+                  {account.isDefault && (
+                    <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
+                      Default
+                    </span>
+                  )}
+                </div>
+
+                <p className="mt-1 text-xs text-slate-500">
+                  {account.type.replace("_", " ")} · {account.currency}
+                </p>
+              </div>
+
+              <p
+                className={`text-sm font-semibold ${
+                  account.currentBalanceMinor >= zero
+                    ? "text-slate-900"
+                    : "text-red-600"
+                }`}
+              >
+                {formatMoneyFromMinorUnits(
+                  account.currentBalanceMinor,
+                  account.currency
+                )}
+              </p>
+            </div>
+          ))}
+
+          {accounts.length > 3 && (
+            <p className="text-xs text-slate-500">
+              +{accounts.length - 3} more account
+              {accounts.length - 3 === 1 ? "" : "s"}
+            </p>
+          )}
+        </div>
+      </section>
 
       <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
         <div className="flex items-start justify-between gap-4">
