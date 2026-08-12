@@ -9,6 +9,7 @@ import {
   parseDateInputToTransactionDate,
   parseMonthInputToBudgetPeriod,
 } from "@/lib/date";
+import { DashboardIncomeExpenseChart } from "@/components/finance-charts";
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
 import { MonthSelector } from "@/components/month-selector";
@@ -243,6 +244,17 @@ export default async function DashboardPage({
     savingsGoals[0]?.currency ??
     debts[0]?.currency ?? 
     "USD";
+
+  const dashboardIncomeExpenseChartData = [
+    {
+      name: "Income",
+      amount: Number(incomeTotalMinor) / 100,
+    },
+    {
+      name: "Expenses",
+      amount: Number(expenseTotalMinor) / 100,
+    },
+  ];
 
   const todayInputValue = getTodayDateInputValue();
   const todayDate = parseDateInputToTransactionDate(todayInputValue);
@@ -483,6 +495,24 @@ export default async function DashboardPage({
           valueClassName="text-slate-900"
         />
       </div>
+
+      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h2 className="font-semibold text-slate-900">Income vs expenses</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Quick comparison for {formatMonthLabel(currentMonthValue)}.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 h-72">
+          <DashboardIncomeExpenseChart
+            data={dashboardIncomeExpenseChartData}
+            currency={currency}
+          />
+        </div>
+      </section>
 
       <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
         <div className="flex items-start justify-between gap-4">

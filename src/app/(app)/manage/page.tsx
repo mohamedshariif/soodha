@@ -53,6 +53,11 @@ const manageItems: ManageItems[] = [
     description: "Track debts and payments.",
     icon: CreditCard,
   },
+  {
+    href: "/reports",
+    title: "Reports",
+    description: "Review monthly income, expenses, and money movement.",
+  },
 ];
 
 export default function ManagePage() {

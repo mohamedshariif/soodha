@@ -21,7 +21,7 @@ const mobileNavItems: MobileNavItem[] = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/manage", label: "Manage", icon: ListSortDescending },
   { href: "/transactions", label: "Transactions", icon: Receipt },
-  { href: "/bills", label: "Reports", icon: BarChart3 },
+  { href: "/reports", label: "Reports", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

@@ -5,11 +5,28 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { MonthSelector } from "@/components/month-selector";
 import { TimeGreeting } from "@/components/time-greeting";
 
+function getHeaderDescription(pathname: string) {
+  if (pathname === "/dashboard") {
+    return "Here is your money overview";
+  }
+
+  if (pathname === "/reports") {
+    return "Review your monthly financial report";
+  }
+
+  return "Welcome back to Soodha";
+}
+
 export function AppHeader({ fullName }: { fullName: string }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const isDashboard = pathname === "/dashboard";
+  /* const supportsMonthSelector =
+  pathname.startsWith("/dashboard") || pathname.startsWith("/reports"); */
+
+  const supportsMonthSelector =
+    pathname === "/dashboard" || pathname === "/reports";
+  
   const selectedMonth = searchParams.get("month") ?? "";
 
   return (
@@ -25,16 +42,14 @@ export function AppHeader({ fullName }: { fullName: string }) {
         </p>
 
         <p className="text-xs text-slate-500">
-          {isDashboard
-            ? "Here is your money overview"
-            : "Welcome back to Soodha"}
+          {getHeaderDescription(pathname)}
         </p>
       </div>
 
       <div className="flex items-center gap-3">
-        {isDashboard && (
+        {supportsMonthSelector && (
           <div className="hidden lg:block">
-            <MonthSelector value={selectedMonth} />
+            <MonthSelector value={selectedMonth}/>
           </div>
         )}
 
