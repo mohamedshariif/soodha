@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/app-header";
 import { AppBottomNav } from "@/components/app-bottom-nav";
 import { AppSidebar } from "@/components/app-sidebar";
 import { getCurrentAppUser } from "@/lib/current-app-user";
+import { ToastProvider } from "@/components/ui/toast-provider";
 
 export default async function AppLayout({
   children,
@@ -16,6 +17,7 @@ export default async function AppLayout({
   const fullName = appUser?.profile?.fullName ?? "there";
 
   return (
+    <ToastProvider>
     <div className="h-screen overflow-hidden bg-slate-50">
       <div className="flex h-full">
         <AppSidebar />
@@ -31,5 +33,6 @@ export default async function AppLayout({
         <AppBottomNav />
       </div>
     </div>
+    </ToastProvider>
   );
 }

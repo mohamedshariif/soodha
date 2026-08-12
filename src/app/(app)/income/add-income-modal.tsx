@@ -2,6 +2,9 @@
 
 import { useRef, useState, useTransition } from "react";
 import { createIncome } from "./actions";
+import { FormAlert } from "@/components/ui/form-alert";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { useToast } from "@/components/ui/toast-provider";
 
 export function AddIncomeModal({
   incomeCategories,
@@ -19,27 +22,60 @@ export function AddIncomeModal({
   today: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const { showToast } = useToast();
 
   const defaultAccount = accounts.find((account) => account.isDefault);
+
+  function closeModal() {
+    if (isPending) return;
+
+    setErrorMessage(null);
+    setIsOpen(false);
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    setErrorMessage(null);
+
     const formData = new FormData(event.currentTarget);
 
     startTransition(async () => {
-      await createIncome(formData);
+      const result = await createIncome(formData);
+
+      if (!result.ok) {
+        setErrorMessage(result.message);
+
+        showToast({
+          type: "error",
+          title: "Income not saved",
+          message: result.message,
+        });
+
+        return;
+      }
+
       formRef.current?.reset();
       setIsOpen(false);
+
+      showToast({
+        type: "success",
+        title: "Income saved",
+        message: result.message,
+      });
     });
   }
 
   return (
     <>
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setErrorMessage(null);
+          setIsOpen(true);
+        }}
         className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
       >
         Add income
@@ -58,14 +94,21 @@ export function AddIncomeModal({
 
               <button
                 type="button"
-                onClick={() => setIsOpen(false)}
-                className="rounded-lg px-2 py-1 text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                onClick={closeModal}
+                disabled={isPending}
+                className="rounded-lg px-2 py-1 text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Close
               </button>
             </div>
 
             <form ref={formRef} onSubmit={handleSubmit} className="p-5">
+              {errorMessage && (
+                <div className="mb-4">
+                  <FormAlert message={errorMessage} />
+                </div>
+              )}
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="text-sm font-medium text-slate-700">
@@ -154,18 +197,20 @@ export function AddIncomeModal({
               <div className="mt-5 flex justify-end gap-3 border-t border-slate-200 pt-5">
                 <button
                   type="button"
-                  onClick={() => setIsOpen(false)}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  onClick={closeModal}
+                  disabled={isPending}
+                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Cancel
                 </button>
 
-                <button
-                  disabled={isPending}
-                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                <LoadingButton
+                  isLoading={isPending}
+                  loadingText="Saving..."
+                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
                 >
-                  {isPending ? "Saving..." : "Save income"}
-                </button>
+                  Save income
+                </LoadingButton>
               </div>
             </form>
           </div>
