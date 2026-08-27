@@ -21,15 +21,17 @@ function getTimeGreeting(date: Date) {
 }
 
 export function TimeGreeting({ name }: { name: string }) {
-  const [greeting, setGreeting] = useState("Good day");
+  const [greeting, setGreeting] = useState("Hello");
 
   useEffect(() => {
     setGreeting(getTimeGreeting(new Date()));
   }, []);
 
   return (
-    <>
-      {greeting}, {name}
-    </>
+    <div>
+      <h1 className="text-xl font-bold text-foreground">
+        {greeting}, {name}
+      </h1>
+    </div>
   );
 }

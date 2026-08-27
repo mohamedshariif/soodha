@@ -1,13 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { actionError, actionSuccess, type ActionResult } from "@/lib/action-result";
-import { parseDateInputToTransactionDate } from "@/lib/date";
+import { actionSuccess, actionError, type ActionResult } from "@/lib/action-result";
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { parseAmountToMinorUnits } from "@/lib/money";
+import { parseDateInputToTransactionDate } from "@/lib/date";
 import { prisma } from "@/lib/prisma";
 
-export async function createIncome(formData: FormData): Promise<ActionResult> {
+export async function createExpense(formData: FormData): Promise<ActionResult> {
   try {
     const appUser = await getCurrentAppUser();
 
@@ -18,7 +18,6 @@ export async function createIncome(formData: FormData): Promise<ActionResult> {
     const amountValue = formData.get("amount")?.toString();
     const categoryId = formData.get("categoryId")?.toString();
     const accountId = formData.get("accountId")?.toString();
-    const description = formData.get("description")?.toString().trim();
     const transactionDateValue = formData.get("transactionDate")?.toString();
     const note = formData.get("note")?.toString().trim();
 
@@ -30,48 +29,44 @@ export async function createIncome(formData: FormData): Promise<ActionResult> {
       throw new Error("Category is required.");
     }
 
-    if (!description) {
-      throw new Error("Description is required.");
+    if (!accountId) {
+      throw new Error("Account is required.");
+    }
+
+    if (!transactionDateValue) {
+      throw new Error("Date is required.");
     }
 
     const amountMinor = parseAmountToMinorUnits(amountValue);
-    const transactionDate = parseDateInputToTransactionDate(transactionDateValue);
+    const transactionDate =
+      parseDateInputToTransactionDate(transactionDateValue);
 
     await prisma.$transaction(async (tx) => {
-      const account = accountId
-        ? await tx.account.findFirst({
-            where: {
-              id: accountId,
-              userId: appUser.id,
-              status: "ACTIVE",
-              deletedAt: null,
-            },
-          })
-        : await tx.account.findFirst({
-            where: {
-              userId: appUser.id,
-              isDefault: true,
-              status: "ACTIVE",
-              deletedAt: null,
-            },
-          });
+      const account = await tx.account.findFirst({
+        where: {
+          id: accountId,
+          userId: appUser.id,
+          status: "ACTIVE",
+          deletedAt: null,
+        },
+      });
 
       if (!account) {
         throw new Error("Account not found.");
       }
 
-      const category = await tx.category.findFirst({
+      const category = await prisma.category.findFirst({
         where: {
           id: categoryId,
           userId: appUser.id,
-          type: "INCOME",
+          type: "EXPENSE",
           status: "ACTIVE",
           deletedAt: null,
         },
       });
 
       if (!category) {
-        throw new Error("Income category not found.");
+        throw new Error("Expense category not found.");
       }
 
       await tx.transaction.create({
@@ -79,11 +74,10 @@ export async function createIncome(formData: FormData): Promise<ActionResult> {
           userId: appUser.id,
           accountId: account.id,
           categoryId: category.id,
-          type: "INCOME",
+          type: "EXPENSE",
           amountMinor,
           currency: account.currency,
           transactionDate,
-          description,
           note: note || null,
           sourceType: "MANUAL",
           status: "ACTIVE",
@@ -96,20 +90,18 @@ export async function createIncome(formData: FormData): Promise<ActionResult> {
         },
         data: {
           currentBalanceMinor: {
-            increment: amountMinor,
+            decrement: amountMinor,
           },
         },
       });
     });
 
-    revalidatePath("/income");
-    revalidatePath("/accounts");
+    revalidatePath("/expenses");
     revalidatePath("/dashboard");
     revalidatePath("/transactions");
-    revalidatePath("/reports");
 
-    return actionSuccess("Income was saved successfully.");
+    return actionSuccess("Expense was added successfully.");
   } catch (error) {
-    return actionError(error, "Could not save income.");
+    return actionError(error, "Could not save expenses.");
   }
 }

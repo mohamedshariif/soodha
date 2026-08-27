@@ -17,20 +17,20 @@ export function SectionCard({
 }) {
   return (
     <section
-      className={`rounded-xl border border-slate-200 bg-white p-5 ${className}`}
+      className={`rounded-xl border border-slate-200 bg-card p-5 ${className}`}
     >
       {(title || description || meta || action) && (
         <div className="flex flex-col justify-between gap-2 md:flex-row md:items-center">
           <div>
-            {title && <h2 className="font-semibold text-slate-900">{title}</h2>}
+            {title && <h2 className="font-semibold text-foreground">{title}</h2>}
 
             {description && (
-              <p className="mt-1 text-sm text-slate-500">{description}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{description}</p>
             )}
           </div>
 
           {(meta || action) && (
-            <div className="text-sm text-slate-500">{action ?? meta}</div>
+            <div className="text-sm text-muted-foreground">{action ?? meta}</div>
           )}
         </div>
       )}

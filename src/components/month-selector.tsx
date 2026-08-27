@@ -6,8 +6,6 @@ import {
   CalendarDays,
   Check,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 
 function isMonthValue(value?: string | null) {
@@ -27,7 +25,7 @@ function formatMonthLabel(monthValue: string) {
   const [year, month] = monthValue.split("-").map(Number);
 
   return new Intl.DateTimeFormat("en", {
-    month: "long",
+    month: "short",
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(Date.UTC(year, month - 1, 1, 12, 0, 0, 0)));
@@ -44,20 +42,9 @@ function addMonths(monthValue: string, amount: number) {
   return `${nextYear}-${nextMonth}`;
 }
 
-function isAfterMonth(monthValue: string, compareMonthValue: string) {
-  return monthValue > compareMonthValue;
-}
-
-function getMonthOptions(selectedMonth: string, allowFuture: boolean) {
-  const currentMonth = getCurrentMonthValue();
-
-  const baseMonth =
-    allowFuture || !isAfterMonth(selectedMonth, currentMonth)
-      ? selectedMonth
-      : currentMonth;
-
+function getMonthOptions(currentMonth: string) {
   return Array.from({ length: 24 }, (_, index) => {
-    const value = addMonths(baseMonth, -index);
+    const value = addMonths(currentMonth, -index);
 
     return {
       value,
@@ -66,15 +53,11 @@ function getMonthOptions(selectedMonth: string, allowFuture: boolean) {
   });
 }
 
-export function MonthSelector({
-  value,
-  allowFuture = false,
-}: {
-  value: string;
-  allowFuture?: boolean;
-}) {
+
+export function MonthSelector({ value }: { value: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -83,15 +66,9 @@ export function MonthSelector({
   const currentMonth = getCurrentMonthValue();
   const selectedValue = isMonthValue(value) ? value : currentMonth;
 
-  const monthOptions = getMonthOptions(selectedValue, allowFuture);
-
-  const isNextDisabled =
-    !allowFuture && !isAfterMonth(currentMonth, selectedValue);
+  const monthOptions = getMonthOptions(currentMonth);
 
   function changeMonth(nextValue: string) {
-    if (!allowFuture && isAfterMonth(nextValue, currentMonth)) {
-      return;
-    }
 
     const params = new URLSearchParams(searchParams.toString());
 
@@ -118,70 +95,74 @@ export function MonthSelector({
     };
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const selectedEl = listRef.current?.querySelector('[data-selected="true"]');
+    selectedEl?.scrollIntoView({ block: "nearest" });
+  }, [isOpen]);
+
   return (
-    <div ref={wrapperRef} className="flex w-full items-center gap-2 sm:w-auto">
+    <div ref={wrapperRef} className="relative w-35">
+      <div className="flex items-center justify-end">
       <button
         type="button"
-        onClick={() => changeMonth(addMonths(selectedValue, -1))}
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-300 hover:text-emerald-700"
-        aria-label="Previous month"
+        onClick={() => setIsOpen((current) => !current)}
+        className="flex w-full items-center justify-between rounded-full border border-border bg-card px-3 py-2 text-xs font-medium text-foreground shadow-sm transition hover:border-border-subtle focus:border-border-strong focus:outline-none"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <span className="flex min-w-0 items-center gap-1">
+          <CalendarDays className="w-3.5 h-3.5 shrink-0 text-primary" />
+          <span className="truncate">{formatMonthLabel(selectedValue)}</span>
+        </span>
+
+        <ChevronDown
+          className={`w-3 h-3 shrink-0 text-muted-foreground transition ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
       </button>
-
-      <div className="relative flex-1 sm:w-52">
-        <button
-          type="button"
-          onClick={() => setIsOpen((current) => !current)}
-          className="flex h-11 w-full items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:border-emerald-300 focus:border-emerald-500 focus:outline-none"
-        >
-          <span className="flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-emerald-600" />
-            {formatMonthLabel(selectedValue)}
-          </span>
-
-          <ChevronDown
-            className={`h-4 w-4 text-slate-500 transition ${
-              isOpen ? "rotate-180" : ""
-            }`}
-          />
-        </button>
-
-        {isOpen && (
-          <div className="absolute right-0 z-50 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
-            {monthOptions.map((option) => {
-              const isSelected = option.value === selectedValue;
-
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => changeMonth(option.value)}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition ${
-                    isSelected
-                      ? "bg-emerald-50 font-medium text-emerald-700"
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
-                >
-                  <span>{option.label}</span>
-
-                  {isSelected && <Check className="h-4 w-4" />}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
-      <button
-        type="button"
-        onClick={() => changeMonth(addMonths(selectedValue, 1))}
-        disabled={isNextDisabled}
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-300 hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-slate-200 disabled:hover:text-slate-600"
-        aria-label="Next month"
-      >
-        <ChevronRight className="h-4 w-4" />
-      </button>
+      {isOpen && (
+        <div
+          ref={listRef}
+          className="absolute right-0 z-50 mt-1 max-h-50 w-full overflow-y-auto scrollbar-none rounded-xl border border-border-strong bg-card p-1 shadow-lg"
+        >
+          {monthOptions.map((option) => {
+            const isSelected = option.value === selectedValue;
+            const isCurrent = option.value === currentMonth;
+
+            return (
+              <button
+                key={option.value}
+                type="button"
+                data-selected={isSelected || undefined}
+                onClick={() => changeMonth(option.value)}
+                aria-current={isCurrent ? "date" : undefined}
+                className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition ${
+                  isSelected
+                    ? "bg-primary font-medium text-primary-foreground"
+                    : isCurrent
+                      ? "bg-muted text-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  {option.label}
+                  {isCurrent && !isSelected && (
+                    <span 
+                      className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"
+                      aria-hidden="true"
+                    />
+                  )}
+                </span>
+
+                {isSelected && <Check className="h-4 w-4 shrink-0" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

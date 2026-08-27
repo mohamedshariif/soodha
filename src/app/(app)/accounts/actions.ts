@@ -4,14 +4,17 @@ import { revalidatePath } from "next/cache";
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { parseAmountToMinorUnits } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
+import { actionError, actionSuccess, type ActionResult } from "@/lib/action-result";
+import { MOBILE_MONEY_PROVIDERS, type MobileMoneyProvider } from "@/lib/mobile-money-providers";
 
-const accountTypes = new Set(["CASH", "BANK", "MOBILE_MONEY", "CARD", "OTHER"]);
+const accountTypes = new Set(["CASH", "BANK", "MOBILE_MONEY"]);
 
 function normalizeText(value: string) {
   return value.trim().replace(/\s+/g, " ");
 }
 
-export async function createAccount(formData: FormData) {
+export async function createAccount(formData: FormData): Promise<ActionResult> {
+  try {
   const appUser = await getCurrentAppUser();
 
   if (!appUser) {
@@ -20,7 +23,7 @@ export async function createAccount(formData: FormData) {
 
   const rawName = formData.get("name")?.toString();
   const type = formData.get("type")?.toString();
-  const provider = formData.get("provider")?.toString().trim();
+  const providerValue = formData.get("provider")?.toString().trim();
   const openingBalanceValue = formData.get("openingBalance")?.toString();
 
   if (!rawName?.trim()) {
@@ -32,6 +35,37 @@ export async function createAccount(formData: FormData) {
   }
 
   const name = normalizeText(rawName);
+
+  const existing = await prisma.account.findFirst({
+    where: {
+      userId: appUser.id,
+      name,
+      status: "ACTIVE",
+      deletedAt: null
+    },
+  });
+
+  if (existing) {
+    throw new Error (`An account named "${name}" already exists.`);
+  }
+
+  let provider: string;
+
+  if (type === "MOBILE_MONEY") {
+    if (
+        !providerValue ||
+        !MOBILE_MONEY_PROVIDERS.includes(providerValue as MobileMoneyProvider)
+      ) {
+        throw new Error("Please select a mobile money provider.");
+      }
+
+      provider = providerValue;
+    } else if (type === "CASH") {
+      provider = "Cash";
+    } else {
+      // type === "BANK" (guaranteed by the accountTypes.has check above)
+      provider = "Bank";
+    }
 
   const openingBalanceMinor = openingBalanceValue?.trim()
     ? parseAmountToMinorUnits(openingBalanceValue)
@@ -54,8 +88,8 @@ export async function createAccount(formData: FormData) {
     data: {
       userId: appUser.id,
       name,
-      type: type as "CASH" | "BANK" | "MOBILE_MONEY" | "CARD" | "OTHER",
-      provider: provider || null,
+      type: type as "CASH" | "BANK" | "MOBILE_MONEY",
+      provider,
       currency: defaultCurrency,
       openingBalanceMinor,
       currentBalanceMinor: openingBalanceMinor,
@@ -67,9 +101,15 @@ export async function createAccount(formData: FormData) {
   revalidatePath("/accounts");
   revalidatePath("/settings");
   revalidatePath("/dashboard");
+
+  return actionSuccess(`"${name}" was added`);
+} catch (error) {
+  return actionError(error, "Could not create account.");
+}
 }
 
-export async function setDefaultAccount(formData: FormData) {
+export async function setDefaultAccount(formData: FormData): Promise<ActionResult> {
+  try {
   const appUser = await getCurrentAppUser();
 
   if (!appUser) {
@@ -93,6 +133,10 @@ export async function setDefaultAccount(formData: FormData) {
 
   if (!account) {
     throw new Error("Account not found.");
+  }
+
+  if (account.isDefault) {
+    return actionSuccess(`"${account.name}" is already your default account.`);
   }
 
   await prisma.$transaction(async (tx) => {
@@ -120,14 +164,18 @@ export async function setDefaultAccount(formData: FormData) {
   revalidatePath("/accounts");
   revalidatePath("/settings");
   revalidatePath("/dashboard");
-  revalidatePath("/income");
-  revalidatePath("/expenses");
   revalidatePath("/bills");
   revalidatePath("/savings");
   revalidatePath("/debts");
+  
+  return actionSuccess(`"${account.name}" is now your default account.`);
+} catch (error) {
+  return actionError(error, "Could not set default account.");
+}
 }
 
-export async function archiveAccount(formData: FormData) {
+export async function archiveAccount(formData: FormData): Promise<ActionResult> {
+  try {
   const appUser = await getCurrentAppUser();
 
   if (!appUser) {
@@ -157,17 +205,41 @@ export async function archiveAccount(formData: FormData) {
     throw new Error("Set another account as default before archiving this one.");
   }
 
-  await prisma.account.update({
+  const transactionCount = await prisma.transaction.count({
     where: {
-      id: account.id,
+      userId: appUser.id,
+      accountId: account.id
     },
-    data: {
-      status: "ARCHIVED",
-      deletedAt: new Date(),
-    },
+  });
+
+  if (transactionCount > 0) {
+    await prisma.account.update({
+      where: {
+        id: account.id,
+      },
+      data: {
+        status: "ARCHIVED",
+        deletedAt: new Date(),
+      },
+    });
+
+  revalidatePath("/accounts");
+  revalidatePath("/settings");
+  revalidatePath("/dashboard");
+
+  return actionSuccess(`"${account.name}" was archived since it has transaction history.`);
+  }
+
+  await prisma.account.delete({
+    where: { id: account.id } 
   });
 
   revalidatePath("/accounts");
   revalidatePath("/settings");
   revalidatePath("/dashboard");
+
+  return actionSuccess(`"${account.name}" was deleted.`);
+} catch (error) {
+  return actionError(error, "Could not remove account.");
+}
 }

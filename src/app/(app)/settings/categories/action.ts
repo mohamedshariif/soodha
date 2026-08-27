@@ -3,11 +3,22 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { prisma } from "@/lib/prisma";
-import { CATEGORY_COLORS } from "@/lib/category-colors";
-import { suggestCategoryIcon } from "@/lib/category-icon-suggest";
-import { actionError, actionSuccess, type ActionResult } from "@/lib/action-result";
+import { DEFAULT_CATEGORY_ICON } from "@/lib/category-icons";
 
 type CategoryType = "INCOME" | "EXPENSE";
+
+export const CATEGORY_COLORS = [
+  "#10B981", // emerald
+  "#EF4444", // red
+  "#F59E0B", // amber
+  "#3B82F6", // blue
+  "#8B5CF6", // violet
+  "#14B8A6", // teal
+  "#F43F5E", // rose
+  "#F97316", // orange
+  "#6366F1", // indigo
+  "#64748B", // slate
+] as const;
 
 function isCategoryType(value: FormDataEntryValue | null): value is CategoryType {
   return value === "INCOME" || value === "EXPENSE";
@@ -22,7 +33,6 @@ function formatCategoryName(value: string) {
 }
 
 export async function createCategory(formData: FormData) {
-  try {
   const appUser = await getCurrentAppUser();
 
   if (!appUser) {
@@ -47,19 +57,6 @@ export async function createCategory(formData: FormData) {
 
   const name = formatCategoryName(rawName);
 
-  const exisiting = await prisma.category.findFirst({
-    where: {
-      userId: appUser.id,
-      name,
-      type,
-      deletedAt: null
-    },
-  });
-
-  if (exisiting) {
-    throw new Error(`"${name}" already exisits in ${type === "INCOME" ? "Income" : "Expense"} categories.`);
-  }
-
   await prisma.category.upsert({
     where: {
       userId_name_type: {
@@ -76,7 +73,7 @@ export async function createCategory(formData: FormData) {
       userId: appUser.id,
       name,
       type,
-      icon: suggestCategoryIcon(name),
+      icon: DEFAULT_CATEGORY_ICON,
       color,
       isDefault: false,
       status: "ACTIVE",
@@ -84,15 +81,9 @@ export async function createCategory(formData: FormData) {
   });
 
   revalidatePath("/settings/categories");
-
-  return actionSuccess(`"${name}" was added.`);
-} catch(error) {
-  return actionError(error, "Could not create category.");
-}
 }
 
 export async function updateCategory(formData: FormData) {
-  try {
   const appUser = await getCurrentAppUser();
 
   if (!appUser) {
@@ -136,7 +127,7 @@ export async function updateCategory(formData: FormData) {
   });
 
   if (existingCategory) {
-    throw new Error(`"${name}" already exists.`);
+    throw new Error("A category with this name already exists.");
   }
 
   await prisma.category.update({
@@ -145,20 +136,13 @@ export async function updateCategory(formData: FormData) {
     },
     data: {
       name,
-      icon: suggestCategoryIcon(name),
     },
   });
 
   revalidatePath("/settings/categories");
-
-  return actionSuccess(`"${name}" was updated.`)
-} catch(error) {
-  return actionError(error, "Could not update category.");
-}
 }
 
 export async function deleteCategory(formData: FormData) {
-  try {
   const appUser = await getCurrentAppUser();
 
   if (!appUser) {
@@ -205,19 +189,11 @@ export async function deleteCategory(formData: FormData) {
       where: { id: categoryId },
       data: { status: "ARCHIVED", deletedAt: new Date() },
     });
-
-    revalidatePath("/settings/categories");
-    return actionSuccess(`"${category.name}" was archieved since it's in use.`);
+  } else {
+    await prisma.category.delete({
+      where: { id: categoryId },
+    });
   }
 
-  await prisma.category.delete({
-    where: { id: categoryId }
-  });
-  
   revalidatePath("/settings/categories");
-  return actionSuccess(`"${category.name}" was deleted.`);
-} catch(error) {
-  return actionError(error, "Could not delete category.");
-}
-
 }

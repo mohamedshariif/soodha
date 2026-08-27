@@ -22,6 +22,12 @@ const slate = "#64748B";
 
 const pieColors = [red, amber, blue, emerald, slate, "#8B5CF6", "#14B8A6"];
 
+type WeeklyChartDatum = {
+  week: string;
+  income: number;
+  expense: number;
+};
+
 type TooltipPayload = {
   name?: string;
   value?: number | string;
@@ -73,23 +79,57 @@ function MoneyTooltip({ active, payload, label, currency }: TooltipProps) {
   }
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-lg">
-      {label && <p className="mb-1 font-medium text-slate-900">{label}</p>}
+    <div className="rounded-lg border border-border bg-card px-3 py-2 text-sm shadow-lg">
+      {label && <p className="mb-1 font-medium text-foreground">{label}</p>}
 
       <div className="space-y-1">
-        {payload.map((item) => (
+        {payload.map((item) => {
+          const isIncome = item.name === "income" || item.name === "Income";
+          const isExpense = item.name === "expense" || item.name === "Expense" || item.name === "Expenses";
+
+          const valueColor = isIncome
+            ? "text-primary"
+            : isExpense
+              ? "text-red-600"
+              : "text-foreground"
+          
+          return (
           <div
             key={`${item.name}-${item.value}`}
             className="flex items-center justify-between gap-4"
           >
-            <span className="text-slate-500">{item.name}</span>
-            <span className="font-medium text-slate-900">
+            <span className="text-muted-foreground">
+              {isIncome ? "Income" : isExpense ? "Expenses" : item.name}
+            </span>
+            <span className={`font-medium ${valueColor}`}>
               {formatChartMoney(Number(item.value ?? 0), currency)}
             </span>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
+  );
+}
+
+function OrderedLegend() {
+  const items = [
+    { value: "Income", color: emerald },
+    { value: "Expense", color: red },
+  ];
+
+  return (
+    <ul className="flex items-center justify-center gap-4 pt-2">
+      {items.map((item) => (
+        <li key={item.value} className="flex items-center gap-1.5 text-md text-muted-foreground">
+          <span
+            className="h-2.5 w-2.5 rounded-full"
+            style={{ backgroundColor: item.color }}
+          />
+          {item.value}
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -97,28 +137,32 @@ export function DashboardIncomeExpenseChart({
   data,
   currency,
 }: {
-  data: BarPoint[];
+  data: WeeklyChartDatum[];
   currency: string;
 }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-        <XAxis dataKey="name" tickLine={false} axisLine={false} />
+      <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <XAxis 
+          dataKey="week" 
+          tickLine={false} 
+          axisLine={false}
+          tick={{ fill: "var(--color-muted-foreground)", fontSize: 14 }} 
+        />
         <YAxis
           tickLine={false}
           axisLine={false}
+          tick={{ fill: "var(--color-muted-foreground)", fontSize: 14 }}
           tickFormatter={(value) => formatCompactMoney(Number(value), currency)}
         />
-        <Tooltip content={<MoneyTooltip currency={currency} />} />
-        <Bar dataKey="amount" name="Amount" radius={[8, 8, 0, 0]}>
-          {data.map((entry) => (
-            <Cell
-              key={entry.name}
-              fill={entry.name === "Income" ? emerald : red}
-            />
-          ))}
-        </Bar>
+        <Tooltip 
+          content={<MoneyTooltip currency={currency} />} 
+          cursor={{ fill: "var(--color-muted)", opacity: 0.7 }}
+        />
+        <Legend content={<OrderedLegend />}/>
+        <Bar dataKey="income" name="income" fill={emerald} radius={[4, 4, 0, 0]} />
+        
+        <Bar dataKey="expense" name="expense" fill={red} radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

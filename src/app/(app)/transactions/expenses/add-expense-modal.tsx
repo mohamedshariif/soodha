@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
-import { createExpense } from "@/app/(app)/expenses/actions";
-import { FormAlert } from "@/components/ui/form-alert";
+import { useState, useTransition } from "react";
+import { createExpense } from "@/app/(app)/transactions/expenses/actions";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { useToast } from "@/components/ui/toast-provider";
+import { CircleMinus, X } from "lucide-react";
 
 export function AddExpenseModal({
   expenseCategories,
@@ -22,9 +22,8 @@ export function AddExpenseModal({
   today: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const formRef = useRef<HTMLFormElement>(null);
+
   const { showToast } = useToast();
 
   const defaultAccount = accounts.find((account) => account.isDefault);
@@ -32,13 +31,11 @@ export function AddExpenseModal({
   function closeModal() {
     if (isPending) return;
 
-    setErrorMessage(null);
     setIsOpen(false);
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setErrorMessage(null);
 
     const formData = new FormData(event.currentTarget);
 
@@ -46,7 +43,6 @@ export function AddExpenseModal({
       const result = await createExpense(formData);
 
       if (!result.ok) {
-        setErrorMessage(result.message);
 
         showToast({
           type: "error",
@@ -57,7 +53,6 @@ export function AddExpenseModal({
         return;
       }
 
-      formRef.current?.reset();
       setIsOpen(false);
 
       showToast({
@@ -73,18 +68,18 @@ export function AddExpenseModal({
       <button
         type="button"
         onClick={() => {
-          setErrorMessage(null);
           setIsOpen(true);
         }}
-        className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+        className="flex items-center gap-1 rounded-lg bg-card px-4 py-2 text-sm font-medium text-foreground border border-border-strong cursor-pointer shadow-md hover:border-red-500 hover:text-red-500 transition"
       >
+        <CircleMinus className="w-4 h-4 text-red-600"/>
         Add expense
       </button>
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="w-full max-w-2xl rounded-xl bg-white shadow-xl">
-            <div className="flex items-start justify-between border-b border-slate-200 p-5">
+          <div className="w-full max-w-2xl rounded-xl bg-card shadow-xl">
+            <div className="flex items-start justify-between border-b border-border p-5">
               <div>
                 <h2 className="font-semibold text-slate-900">Add expense</h2>
                 <p className="mt-1 text-sm text-slate-500">
@@ -95,55 +90,66 @@ export function AddExpenseModal({
               <button
                 type="button"
                 onClick={closeModal}
+                aria-label="Close"
                 disabled={isPending}
-                className="rounded-lg px-2 py-1 text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full p-1 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Close
+                <X className="size-4"/>
               </button>
             </div>
 
-            <form ref={formRef} onSubmit={handleSubmit} className="p-5">
-              {errorMessage && (
-                <div className="mb-4">
-                  <FormAlert message={errorMessage} />
-                </div>
-              )}
+            <form 
+              onSubmit={handleSubmit} 
+              className="p-5"
+            >
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="text-sm font-medium text-slate-700">
+                  <label className="text-sm font-medium text-muted-foreground">
                     Amount
                   </label>
                   <input
+                    type="number"
                     name="amount"
                     placeholder="25.00"
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-red-500"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-slate-700">
-                    Date
+                  <label className="text-sm font-medium text-foreground">
+                    Category
                   </label>
-                  <input
-                    type="date"
-                    name="transactionDate"
-                    defaultValue={today}
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-red-500"
-                  />
+                  <select
+                    name="categoryId"
+                    defaultValue=""
+                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
+                    required
+                  >
+                    <option value="" disabled>
+                      Select category
+                    </option>
+                    {expenseCategories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-slate-700">
+                  <label className="text-sm font-medium text-foreground">
                     Account
                   </label>
                   <select
                     name="accountId"
                     defaultValue={defaultAccount?.id ?? accounts[0]?.id}
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-red-500"
-                    required
+                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
                   >
+                    <option value="" disabled>
+                      Select account
+                    </option>
                     {accounts.map((account) => (
                       <option key={account.id} value={account.id}>
                         {account.name} · {account.currency}
@@ -154,52 +160,35 @@ export function AddExpenseModal({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-slate-700">
-                    Category
-                  </label>
-                  <select
-                    name="categoryId"
-                    className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-red-500"
-                    required
-                  >
-                    {expenseCategories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-slate-700">
-                    Description
+                  <label className="text-sm font-medium text-foreground">
+                    Date
                   </label>
                   <input
-                    name="description"
-                    placeholder="e.g. Food, transport, internet"
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-red-500"
-                    required
+                    type="date"
+                    name="transactionDate"
+                    defaultValue={today}
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-slate-700">
+                  <label className="text-sm font-medium text-foreground">
                     Note
                   </label>
                   <input
                     name="note"
                     placeholder="Optional note"
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-red-500"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
                   />
                 </div>
               </div>
 
-              <div className="mt-5 flex justify-end gap-3 border-t border-slate-200 pt-5">
+              <div className="mt-5 flex justify-end gap-3 border-t border-border pt-5">
                 <button
                   type="button"
                   onClick={closeModal}
                   disabled={isPending}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -207,7 +196,7 @@ export function AddExpenseModal({
                 <LoadingButton
                   isLoading={isPending}
                   loadingText="Saving..."
-                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-red-700 cursor-pointer"
                 >
                   Save expense
                 </LoadingButton>

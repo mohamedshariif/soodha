@@ -24,7 +24,7 @@ export function AddDebtModal() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
       >
         Add debt
       </button>
@@ -124,14 +124,14 @@ export function AddDebtModal() {
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  className="rounded-lg border border-border-strong px-4 py-2 text-text-primary hover:bg-card"
                 >
                   Cancel
                 </button>
 
                 <button
                   disabled={isPending}
-                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isPending ? "Saving..." : "Save debt"}
                 </button>

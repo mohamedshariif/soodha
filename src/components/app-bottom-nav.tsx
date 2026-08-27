@@ -29,7 +29,7 @@ export function AppBottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white px-2 py-2 lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border-strong bg-card p-2 lg:hidden">
       <div className="grid grid-cols-5 gap-1">
         {mobileNavItems.map((item) => {
           const Icon = item.icon;
@@ -43,11 +43,11 @@ export function AppBottomNav() {
               href={item.href}
               className={`flex flex-col items-center gap-1 rounded-lg px-2 py-2 text-center text-xs font-medium transition ${
                 isActive
-                  ? "bg-green-100 text-green-700"
-                  : "text-slate-700 hover:bg-green-50 hover:text-green-700"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-primary-hover"
               }`}
             >
-              <Icon className="h-6 w-6"/>
+              <Icon className="h-5 w-5"/>
               <span>{item.label}</span>
             </Link>
           );

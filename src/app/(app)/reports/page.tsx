@@ -245,8 +245,8 @@ export default async function ReportsPage({
     <div>
       <div className="flex flex-col gap-4 lg:hidden">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Reports</h1>
-          <p className="mt-2 text-slate-600">
+          <h1 className="text-2xl font-bold text-foreground">Reports</h1>
+          <p className="mt-2 text-muted-foreground">
             Review your monthly financial report for{" "}
             {formatMonthLabel(currentMonthValue)}.
           </p>

@@ -29,8 +29,6 @@ enum AccountType {
   CASH
   BANK
   MOBILE_MONEY
-  CARD
-  OTHER
 }
 
 enum RecordStatus {
@@ -205,7 +203,7 @@ model Transaction {
   amountMinor     BigInt                @map("amount_minor")
   currency        String                @db.VarChar(3)
   transactionDate DateTime              @default(now()) @map("transaction_date")
-  description     String
+  description     String?
   note            String?
   paymentMethod   String?               @map("payment_method")
   sourceType      TransactionSourceType @default(MANUAL) @map("source_type")

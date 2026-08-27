@@ -1,15 +1,7 @@
-import {
-  Banknote,
-  Building2,
-  CreditCard,
-  Landmark,
-  MoreHorizontal,
-  Smartphone,
-  Star,
-  Wallet,
-} from "lucide-react";
+import { Banknote, Landmark, Smartphone, Wallet } from "lucide-react";
 import { AddAccountModal } from "./add-account-modal";
-import { archiveAccount, setDefaultAccount } from "./actions";
+import { AccountCard } from "./account-card";
+import type { AccountType } from "./account-visuals";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SummaryCard } from "@/components/ui/summary-card";
 import { getCurrentAppUser } from "@/lib/current-app-user";
@@ -18,37 +10,7 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-function formatAccountType(type: string) {
-  switch (type) {
-    case "CASH":
-      return "Cash";
-    case "BANK":
-      return "Bank";
-    case "MOBILE_MONEY":
-      return "Mobile money";
-    case "CARD":
-      return "Card";
-    default:
-      return "Other";
-  }
-}
-
-function AccountTypeIcon({ type }: { type: string }) {
-  const className = "h-5 w-5";
-
-  switch (type) {
-    case "CASH":
-      return <Wallet className={className} />;
-    case "BANK":
-      return <Landmark className={className} />;
-    case "MOBILE_MONEY":
-      return <Smartphone className={className} />;
-    case "CARD":
-      return <CreditCard className={className} />;
-    default:
-      return <MoreHorizontal className={className} />;
-  }
-}
+const RECENT_TRANSACTIONS_PER_ACCOUNT = 5;
 
 export default async function AccountsPage() {
   const appUser = await getCurrentAppUser();
@@ -75,13 +37,40 @@ export default async function AccountsPage() {
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
   });
 
+  const recentTransactionsEntries = await Promise.all(
+    accounts.map(async (account) => {
+      const transactions = await prisma.transaction.findMany({
+        where: {
+          userId: appUser.id,
+          accountId: account.id,
+          status: "ACTIVE",
+          deletedAt: null,
+        },
+        include: {
+          category: { select: { name: true } },
+        },
+        orderBy: { transactionDate: "desc" },
+        take: RECENT_TRANSACTIONS_PER_ACCOUNT,
+      });
+
+      return [account.id, transactions] as const;
+    }),
+  );
+
+  const recentTransactionsByAccount = new Map(recentTransactionsEntries);
+
   const totalBalanceMinor = accounts.reduce((total, account) => {
     return total + account.currentBalanceMinor;
   }, zero);
 
-  const totalOpeningBalanceMinor = accounts.reduce((total, account) => {
-    return total + account.openingBalanceMinor;
-  }, zero);
+  const totalsByType = accounts.reduce(
+    (totals, account) => {
+      const key = account.type as AccountType;
+      totals[key] = (totals[key] ?? zero) + account.currentBalanceMinor;
+      return totals;
+    },
+    {} as Record<AccountType, bigint>,
+  );
 
   const defaultAccount = accounts.find((account) => account.isDefault);
   const currency =
@@ -92,168 +81,64 @@ export default async function AccountsPage() {
 
   return (
     <div>
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Accounts</h1>
-          <p className="mt-2 text-slate-600">
-            Manage where your money is tracked in Soodha.
-          </p>
-        </div>
-
-        <AddAccountModal />
-      </div>
-
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
+      <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-4 lg:gap-3">
         <SummaryCard
           icon={<Banknote className="h-5 w-5" />}
           label="Total balance"
           value={formatMoneyFromMinorUnits(totalBalanceMinor, currency)}
-          helper={`${accounts.length} active account${
-            accounts.length === 1 ? "" : "s"
-          }`}
+          helper={`${accounts.length} active account${accounts.length === 1 ? "" : "s"}`}
           valueClassName={
-            totalBalanceMinor >= zero ? "text-emerald-600" : "text-red-600"
+            totalBalanceMinor >= zero ? "text-white" : "text-red-600"
           }
+          className="bg-linear-to-br from-indigo-500 via-indigo-600 to-indigo-700"
+          labelClassName="text-indigo-100/80"
+          helperClassName="text-white/80"
+          iconClassName="bg-indigo-100/20 text-white/80"
         />
 
         <SummaryCard
-          icon={<Star className="h-5 w-5" />}
-          label="Default account"
-          value={defaultAccount?.name ?? "None"}
-          helper={
-            defaultAccount
-              ? `${formatAccountType(defaultAccount.type)} · ${
-                  defaultAccount.currency
-                }`
-              : "Create or select a default account"
-          }
+          icon={<Wallet className="h-5 w-5" />}
+          label="Total cash"
+          value={formatMoneyFromMinorUnits(totalsByType.CASH ?? zero, currency)}
+          valueClassName="text-amber-600"
         />
 
         <SummaryCard
-          icon={<Building2 className="h-5 w-5" />}
-          label="Opening balances"
-          value={formatMoneyFromMinorUnits(totalOpeningBalanceMinor, currency)}
-          helper="Starting money across active accounts"
+          icon={<Landmark className="h-5 w-5" />}
+          label="Total bank"
+          value={formatMoneyFromMinorUnits(totalsByType.BANK ?? zero, currency)}
+          valueClassName="text-blue-600"
+        />
+
+        <SummaryCard
+          icon={<Smartphone className="h-5 w-5" />}
+          label="Total mobile money"
+          value={formatMoneyFromMinorUnits(
+            totalsByType.MOBILE_MONEY ?? zero,
+            currency,
+          )}
+          valueClassName="text-primary"
         />
       </div>
 
-      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
-        <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-slate-900">Active accounts</h2>
-          <p className="text-sm text-slate-500">
-            {accounts.length} account{accounts.length === 1 ? "" : "s"}
-          </p>
+      <section className="mt-5">
+        <div className="flex items-center justify-between ">
+          <h2 className="font-semibold text-foreground">Active accounts</h2>
+          <AddAccountModal />
         </div>
 
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 grid grid-cols-1 gap-2 lg:grid-cols-3 md:grid-cols-2">
           {accounts.length === 0 ? (
             <EmptyState description="No accounts found. Add your first account to start tracking money." />
           ) : (
             accounts.map((account) => (
-              <div
+              <AccountCard
                 key={account.id}
-                className="rounded-lg border border-slate-200 p-4"
-              >
-                <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
-                  <div className="flex gap-3">
-                    <div
-                      className={`rounded-lg p-2 ${
-                        account.isDefault
-                          ? "bg-emerald-50 text-emerald-600"
-                          : "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      <AccountTypeIcon type={account.type} />
-                    </div>
-
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium text-slate-900">
-                          {account.name}
-                        </p>
-
-                        {account.isDefault && (
-                          <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
-                            Default
-                          </span>
-                        )}
-                      </div>
-
-                      <p className="mt-1 text-sm text-slate-500">
-                        {formatAccountType(account.type)} · {account.currency}
-                      </p>
-
-                      {account.provider && (
-                        <p className="mt-1 text-sm text-slate-500">
-                          Provider: {account.provider}
-                        </p>
-                      )}
-
-                      <p className="mt-1 text-xs text-slate-500">
-                        {account._count.transactions} transaction
-                        {account._count.transactions === 1 ? "" : "s"} linked
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="text-left md:text-right">
-                    <p
-                      className={`text-lg font-semibold ${
-                        account.currentBalanceMinor >= zero
-                          ? "text-slate-900"
-                          : "text-red-600"
-                      }`}
-                    >
-                      {formatMoneyFromMinorUnits(
-                        account.currentBalanceMinor,
-                        account.currency
-                      )}
-                    </p>
-
-                    <p className="mt-1 text-xs text-slate-500">
-                      Opening{" "}
-                      {formatMoneyFromMinorUnits(
-                        account.openingBalanceMinor,
-                        account.currency
-                      )}
-                    </p>
-
-                    <div className="mt-3 flex flex-wrap justify-start gap-3 md:justify-end">
-                      {!account.isDefault && (
-                        <form action={setDefaultAccount}>
-                          <input
-                            type="hidden"
-                            name="accountId"
-                            value={account.id}
-                          />
-                          <button className="text-xs font-medium text-emerald-600 hover:text-emerald-700">
-                            Set default
-                          </button>
-                        </form>
-                      )}
-
-                      {!account.isDefault && (
-                        <form action={archiveAccount}>
-                          <input
-                            type="hidden"
-                            name="accountId"
-                            value={account.id}
-                          />
-                          <button className="text-xs font-medium text-red-600 hover:text-red-700">
-                            Archive
-                          </button>
-                        </form>
-                      )}
-
-                      {account.isDefault && (
-                        <p className="text-xs text-slate-500">
-                          Used by new records
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
+                account={account}
+                recentTransactions={
+                  recentTransactionsByAccount.get(account.id) ?? []
+                }
+              />
             ))
           )}
         </div>

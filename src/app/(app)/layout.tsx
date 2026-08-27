@@ -18,7 +18,7 @@ export default async function AppLayout({
 
   return (
     <ToastProvider>
-    <div className="h-screen overflow-hidden bg-slate-50">
+    <div className="h-screen overflow-hidden bg-background">
       <div className="flex h-full">
         <AppSidebar />
 

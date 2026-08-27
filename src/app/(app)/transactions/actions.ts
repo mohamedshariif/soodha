@@ -91,7 +91,7 @@ export async function updateTransaction(formData: FormData) {
   const transactionId = formData.get("transactionId")?.toString();
   const amountValue = formData.get("amount")?.toString();
   const categoryId = formData.get("categoryId")?.toString();
-  const description = formData.get("description")?.toString().trim();
+  const description = formData.get("description")?.toString().trim() || null;
   const transactionDateValue = formData.get("transactionDate")?.toString();
   const note = formData.get("note")?.toString().trim();
 
@@ -107,8 +107,8 @@ export async function updateTransaction(formData: FormData) {
     throw new Error("Category is required.");
   }
 
-  if (!description) {
-    throw new Error("Description is required.");
+  if (!transactionDateValue) {
+    throw new Error("Transaction date is required.");
   }
 
   const newAmountMinor = parseAmountToMinorUnits(amountValue);

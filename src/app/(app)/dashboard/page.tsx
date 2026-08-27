@@ -3,12 +3,12 @@ import {
   addDaysUtc,
   formatDateForDisplay,
   formatMonthLabel,
-  //getCurrentMonthInputValue,
   getTodayDateInputValue,
   isMonthInputValue,
   parseDateInputToTransactionDate,
   parseMonthInputToBudgetPeriod,
 } from "@/lib/date";
+import { getFourWeekBuckets } from "@/lib/weekly-buckets";
 import { DashboardIncomeExpenseChart } from "@/components/finance-charts";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SectionCard } from "@/components/ui/section-card";
@@ -18,8 +18,8 @@ import { formatMoneyFromMinorUnits } from "@/lib/money";
 import { MonthSelector } from "@/components/month-selector";
 import { TimeGreeting } from "@/components/time-greeting";
 
-import { AddExpenseModal } from "@/components/transactions/add-expense-modal";
-import { AddIncomeModal } from "@/components/transactions/add-income-modal";
+import { AddExpenseModal } from "@/app/(app)/transactions/expenses/add-expense-modal";
+import { AddIncomeModal } from "@/app/(app)/transactions/income/add-income-modal";
 
 import {
   TrendingDown,
@@ -27,7 +27,6 @@ import {
   WalletCards,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-//import { SummaryCard } from "@/components/summaryCard";
 
 export const dynamic = "force-dynamic";
 
@@ -49,9 +48,6 @@ export default async function DashboardPage({
   const zero = BigInt(0);
   const oneHundred = BigInt(100);
 
-  /* const currentMonthValue = getCurrentMonthInputValue();
-  const { periodStart, periodEnd } =
-    parseMonthInputToBudgetPeriod(currentMonthValue); */
   const params = await searchParams;
 
   const selectedMonthValue = isMonthInputValue(params.month)
@@ -63,13 +59,13 @@ export default async function DashboardPage({
     periodEnd,
   } = parseMonthInputToBudgetPeriod(selectedMonthValue);
 
+  // Database queries
   const [
-    account,
     accounts,
     incomeCategories,
     expenseCategories,
     incomeTotal, 
-    expenseTotal, 
+    expenseTotal,
     recentTransactions, 
     budgets, 
     activeBills, 
@@ -77,16 +73,9 @@ export default async function DashboardPage({
     savingsGoals,
     debts,
     debtPaymentsThisMonth,
+    weeklyTransactions,
   ] =
     await Promise.all([
-      prisma.account.findFirst({
-        where: {
-          userId: appUser.id,
-          isDefault: true,
-          status: "ACTIVE",
-          deletedAt: null,
-        },
-      }),
 
       prisma.account.findMany({
         where: {
@@ -104,6 +93,10 @@ export default async function DashboardPage({
           status: "ACTIVE",
           deletedAt: null,
         },
+        select: {
+          id: true,
+          name: true,
+        },
         orderBy: [{ isDefault: "desc" }, { name: "asc" }],
       }),
 
@@ -113,6 +106,10 @@ export default async function DashboardPage({
           type: "EXPENSE",
           status: "ACTIVE",
           deletedAt: null,
+        },
+        select: {
+          id: true,
+          name: true,
         },
         orderBy: [{ isDefault: "desc" }, { name: "asc" }],
       }),
@@ -241,7 +238,24 @@ export default async function DashboardPage({
           },
         },
       }),
+
+      prisma.transaction.findMany({
+        where: {
+          userId: appUser.id,
+          status: "ACTIVE",
+          deletedAt: null,
+          type: { in: ["INCOME", "EXPENSE"] },
+          transactionDate: { gte: periodStart, lte: periodEnd },
+        },
+        select: {
+          type: true,
+          amountMinor: true,
+          transactionDate: true,
+        },
+      }),
     ]);
+
+  //Expenses grouping
 
   const budgetCategoryIds = budgets
     .map((budget) => budget.categoryId)
@@ -256,9 +270,6 @@ export default async function DashboardPage({
             type: "EXPENSE",
             status: "ACTIVE",
             deletedAt: null,
-            categoryId: {
-              in: budgetCategoryIds,
-            },
             transactionDate: {
               gte: periodStart,
               lte: periodEnd,
@@ -269,47 +280,53 @@ export default async function DashboardPage({
           },
         })
       : [];
-
-  const spentByCategory = new Map<string, bigint>();
-
-  expensesByCategory.forEach((item) => {
-    if (item.categoryId) {
-      spentByCategory.set(item.categoryId, item._sum?.amountMinor ?? zero);
-    }
-  });
-
-  const incomeTotalMinor = incomeTotal._sum.amountMinor ?? zero;
-  const expenseTotalMinor = expenseTotal._sum.amountMinor ?? zero;
-  const balanceMinor = account?.currentBalanceMinor ?? zero;
-
-  const currency = 
-    account?.currency ??
-    accounts[0]?.currency ??
-    budgets[0]?.currency ??
-    activeBills[0]?.currency ??
-    savingsGoals[0]?.currency ??
-    debts[0]?.currency ?? 
-    "USD";
   
+   const spentByCategory = new Map<string, bigint>();
+    
+    expensesByCategory.forEach((item) => {
+      if (item.categoryId) {
+        spentByCategory.set(item.categoryId, item._sum?.amountMinor ?? zero);
+      }
+    });
+  
+  // Accounts
+  const defaultAccount = accounts.find((account) => account.isDefault) ?? accounts[0];
+
   const totalAccountBalanceMinor = accounts.reduce((total, account) => {
     return total + account.currentBalanceMinor;
   }, zero);
 
-  const defaultAccountName = account?.name ?? accounts[0]?.name ?? "No default account";
+  const defaultAccountName = defaultAccount?.name ?? "No default account";
 
-  const dashboardIncomeExpenseChartData = [
-    {
-      name: "Income",
-      amount: Number(incomeTotalMinor) / 100,
-    },
-    {
-      name: "Expenses",
-      amount: Number(expenseTotalMinor) / 100,
-    },
-  ];
+  // Income & expenses
+  const incomeTotalMinor = incomeTotal._sum.amountMinor ?? zero;
+  const expenseTotalMinor = expenseTotal._sum.amountMinor ?? zero;
 
-  const todayInputValue = getTodayDateInputValue();
-  const todayDate = parseDateInputToTransactionDate(todayInputValue);
+  const weekBuckets = getFourWeekBuckets(periodStart, periodEnd);
+
+const dashboardWeeklyChartData = weekBuckets.map((bucket) => {
+  const inBucket = weeklyTransactions.filter(
+    (t) => t.transactionDate >= bucket.start && t.transactionDate <= bucket.end
+  );
+
+  const income = inBucket
+    .filter((t) => t.type === "INCOME")
+    .reduce((sum, t) => sum + Number(t.amountMinor), 0);
+
+  const expense = inBucket
+    .filter((t) => t.type === "EXPENSE")
+    .reduce((sum, t) => sum + Number(t.amountMinor), 0);
+
+  return {
+    week: bucket.weekLabel,
+    income: income / 100,
+    expense: expense / 100,
+  };
+});
+
+  //  Bills
+  const today = getTodayDateInputValue();
+  const todayDate = parseDateInputToTransactionDate(today);
   const billsAttentionEndDate = addDaysUtc(todayDate, 7);
 
   const billsNeedingAttention = activeBills.filter((bill) => {
@@ -496,82 +513,47 @@ export default async function DashboardPage({
     return 0;
   })[0];
 
+  const currency = 
+    defaultAccount?.currency ??
+    accounts[0]?.currency ??
+    budgets[0]?.currency ??
+    activeBills[0]?.currency ??
+    savingsGoals[0]?.currency ??
+    debts[0]?.currency ?? 
+    "USD";
+
+  const incomeCategoriesOptions = incomeCategories.map((category) => ({
+    id: category.id,
+    name: category.name,
+  }));
+
+  const expenseCategoryOptions = expenseCategories.map((category) => ({
+    id: category.id,
+    name: category.name,
+  }));
+
+  const accountOptions = accounts.map((account) => ({
+    id: account.id,
+    name: account.name,
+    type: account.type,
+    currency: account.currency,
+    isDefault: account.isDefault,
+  }));
+
   return (
     <div>
       <div className="flex flex-col gap-4 lg:hidden">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">
-            <TimeGreeting name={appUser.profile?.fullName ?? "there"} />
-          </h1>
+          <TimeGreeting name={appUser.profile?.fullName ?? "there"} />
 
-          <p className="mt-1 text-sm font-medium text-slate-500">
+          <p className="mt-1 text-sm font-medium text-muted-foreground">
             Here is your money overview
           </p>
         </div>
 
-        <MonthSelector value={currentMonthValue}/>
-
-        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-            <div>
-              <h2 className="font-semibold text-slate-900">Quick actions</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Quickly record income or expenses without leaving the dashboard.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <AddIncomeModal
-                incomeCategories={incomeCategories.map((category) => ({
-                  id: category.id,
-                  name: category.name,
-                }))}
-                accounts={accounts.map((account) => ({
-                  id: account.id,
-                  name: account.name,
-                  type: account.type,
-                  currency: account.currency,
-                  isDefault: account.isDefault,
-                }))}
-                today={todayInputValue}
-              />
-
-              <AddExpenseModal
-                expenseCategories={expenseCategories.map((category) => ({
-                  id: category.id,
-                  name: category.name,
-                }))}
-                accounts={accounts.map((account) => ({
-                  id: account.id,
-                  name: account.name,
-                  type: account.type,
-                  currency: account.currency,
-                  isDefault: account.isDefault,
-                }))}
-                today={todayInputValue}
-              />
-            </div>
-          </div>
-        </div>
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <SummaryCard
-          icon={<TrendingUp className="h-5 w-5" />}
-          label="Income"
-          value={formatMoneyFromMinorUnits(incomeTotalMinor, currency)}
-          helper={`For ${formatMonthLabel(currentMonthValue)}`}
-          valueClassName="text-emerald-600"
-        />
-
-        <SummaryCard
-          icon={<TrendingDown className="h-5 w-5" />}
-          label="Expenses"
-          value={formatMoneyFromMinorUnits(expenseTotalMinor, currency)}
-          helper={`For ${formatMonthLabel(currentMonthValue)}`}
-          valueClassName="text-red-600"
-        />
-
+      <div className="mt-2 grid gap-4 md:grid-cols-3">
         <SummaryCard
           icon={<WalletCards className="h-5 w-5" />}
           label="Total balance"
@@ -580,48 +562,46 @@ export default async function DashboardPage({
             accounts.length === 1 ? "" : "s"
           } · Default: ${defaultAccountName}`}
           valueClassName={
-            totalAccountBalanceMinor >= zero ? "text-slate-900" : "text-red-600"
+            totalAccountBalanceMinor >= zero ? "text-white" : "text-red-600"
           }
+          className="bg-linear-to-br from-[#1fb988] via-[#149672] to-[#065f46] shadow-sm"
+          labelClassName="text-white/80 font-semibold"
+          helperClassName="text-white/70"
+          iconClassName="bg-primary text-white"
+        />
+        <div className="grid grid-cols-2 gap-4 md:contents">
+          <SummaryCard
+            icon={<TrendingUp className="h-5 w-5" />}
+            label="Income"
+            value={formatMoneyFromMinorUnits(incomeTotalMinor, currency)}
+            helper={`For ${formatMonthLabel(currentMonthValue)}`}
+            valueClassName="text-primary"
+          />
+
+          <SummaryCard
+            icon={<TrendingDown className="h-5 w-5" />}
+            label="Expenses"
+            value={formatMoneyFromMinorUnits(expenseTotalMinor, currency)}
+            helper={`For ${formatMonthLabel(currentMonthValue)}`}
+            valueClassName="text-red-600"
+            iconClassName="bg-primary/10 text-red-500"
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 mt-5">
+        <AddIncomeModal 
+          incomeCategories={incomeCategoriesOptions}
+          accounts={accountOptions}
+          today={today}
+        />
+        <AddExpenseModal 
+          expenseCategories={expenseCategoryOptions}
+          accounts={accountOptions}
+          today={today}
         />
       </div>
 
-      {/* <div className="mt-6 grid gap-4 md:grid-cols-3">
-        <DashboardCard
-          label="Income this month"
-          value={formatMoneyFromMinorUnits(incomeTotalMinor, currency)}
-          valueClassName="text-emerald-600"
-        />
-
-        <DashboardCard
-          label="Expenses this month"
-          value={formatMoneyFromMinorUnits(expenseTotalMinor, currency)}
-          valueClassName="text-red-600"
-        />
-
-        <DashboardCard
-          label="Current balance"
-          value={formatMoneyFromMinorUnits(balanceMinor, currency)}
-          valueClassName="text-slate-900"
-        />
-      </div> */}
-
-      {/* <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h2 className="font-semibold text-slate-900">Income vs expenses</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Quick comparison for {formatMonthLabel(currentMonthValue)}.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-4 h-72">
-          <DashboardIncomeExpenseChart
-            data={dashboardIncomeExpenseChartData}
-            currency={currency}
-          />
-        </div>
-      </section> */}
       <SectionCard
         className="mt-6"
         title="Income vs expenses"
@@ -629,7 +609,7 @@ export default async function DashboardPage({
       >
         <div className="mt-4 h-72">
           <DashboardIncomeExpenseChart
-            data={dashboardIncomeExpenseChartData}
+            data={dashboardWeeklyChartData}
             currency={currency}
           />
         </div>

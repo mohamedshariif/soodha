@@ -46,15 +46,15 @@ function getToastStyles(type: ToastType) {
     case "success":
       return {
         icon: <CheckCircle2 className="h-5 w-5" />,
-        iconClassName: "bg-emerald-50 text-emerald-600",
-        borderClassName: "border-emerald-200",
+        iconClassName: "bg-muted text-emerald-600",
+        borderClassName: "border-primary",
       };
 
     case "error":
       return {
         icon: <CircleAlert className="h-5 w-5" />,
-        iconClassName: "bg-red-50 text-red-600",
-        borderClassName: "border-red-200",
+        iconClassName: "bg-muted text-red-600",
+        borderClassName: "border-red-500",
       };
 
     default:
@@ -106,14 +106,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={value}>
       {children}
 
-      <div className="fixed right-4 top-4 z-[100] flex w-[calc(100%-2rem)] max-w-sm flex-col gap-3 sm:right-6 sm:top-6 sm:w-full">
+      <div className="fixed right-4 top-4 z-100 flex w-[calc(100%-2rem)] max-w-sm flex-col gap-3 sm:right-6 sm:top-6 sm:w-full">
         {toasts.map((toast) => {
           const styles = getToastStyles(toast.type);
 
           return (
             <div
               key={toast.id}
-              className={`rounded-xl border ${styles.borderClassName} bg-white p-4 shadow-lg`}
+              className={`rounded-xl border ${styles.borderClassName} bg-card p-4 shadow-lg`}
             >
               <div className="flex items-start gap-3">
                 <div className={`rounded-lg p-2 ${styles.iconClassName}`}>
@@ -121,12 +121,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-900">
+                  <p className="text-sm font-semibold text-foreground">
                     {toast.title}
                   </p>
 
                   {toast.message && (
-                    <p className="mt-1 text-sm text-slate-600">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {toast.message}
                     </p>
                   )}
@@ -135,7 +135,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 <button
                   type="button"
                   onClick={() => dismissToast(toast.id)}
-                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                  className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                   aria-label="Close message"
                 >
                   <X className="h-4 w-4" />

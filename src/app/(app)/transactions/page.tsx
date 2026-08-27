@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { AddExpenseModal } from "@/components/transactions/add-expense-modal";
-import { AddIncomeModal } from "@/components/transactions/add-income-modal";
+import { AddExpenseModal } from "@/app/(app)/transactions/expenses/add-expense-modal";
+import { AddIncomeModal } from "@/app/(app)/transactions/income/add-income-modal";
 import { cancelTransaction } from "./actions";
 import { TransactionsFilterForm } from "./transactions-filter-form";
 import {
