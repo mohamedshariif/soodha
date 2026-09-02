@@ -10,10 +10,10 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="rounded-lg bg-slate-50 p-4">
-      {title && <p className="text-sm font-medium text-slate-900">{title}</p>}
+    <div className="w-full rounded-lg bg-muted p-4 text-center">
+      {title && <p className="text-sm font-medium text-foreground">{title}</p>}
 
-      <p className={title ? "mt-1 text-sm text-slate-600" : "text-sm text-slate-600"}>
+      <p className={title ? "mt-1 text-sm text-muted-foreground" : "text-sm text-muted-foreground"}>
         {description}
       </p>
 
