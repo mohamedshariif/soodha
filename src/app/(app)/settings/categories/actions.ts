@@ -3,8 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { prisma } from "@/lib/prisma";
-import { CATEGORY_COLORS } from "@/lib/category-colors";
-import { suggestCategoryIcon } from "@/lib/category-icon-suggest";
+import { CATEGORY_COLORS } from "@/lib/colors/category-colors";
+import { suggestCategoryIcon } from "@/lib/icons/category-icon-suggests";
 import { actionError, actionSuccess, type ActionResult } from "@/lib/action-result";
 
 type CategoryType = "INCOME" | "EXPENSE";

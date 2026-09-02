@@ -569,7 +569,7 @@ const dashboardWeeklyChartData = weekBuckets.map((bucket) => {
           helperClassName="text-white/70"
           iconClassName="bg-primary text-white"
         />
-        <div className="grid grid-cols-2 gap-4 md:contents">
+        <div className="grid grid-cols-2 gap-2 md:contents">
           <SummaryCard
             icon={<TrendingUp className="h-5 w-5" />}
             label="Income"

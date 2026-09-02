@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Pencil, Trash2, Check, X } from "lucide-react";
-import { getCategoryIcon } from "@/lib/category-icons";
+import { getCategoryIcon } from "@/lib/icons/category-icons";
 import { updateCategory, deleteCategory } from "./actions";
 import { useToast } from "@/components/ui/toast-provider";
 import { ConfirmDeleteModal } from "../../../../components/ui/confirm-delete-modal";

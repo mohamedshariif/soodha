@@ -90,7 +90,7 @@ export default async function AccountsPage() {
           valueClassName={
             totalBalanceMinor >= zero ? "text-white" : "text-red-600"
           }
-          className="bg-linear-to-br from-indigo-500 via-indigo-600 to-indigo-700"
+          className="bg-linear-to-br from-indigo-400 via-indigo-600 to-indigo-700"
           labelClassName="text-indigo-100/80"
           helperClassName="text-white/80"
           iconClassName="bg-indigo-100/20 text-white/80"

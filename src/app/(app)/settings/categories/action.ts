@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { prisma } from "@/lib/prisma";
-import { DEFAULT_CATEGORY_ICON } from "@/lib/category-icons";
+import { DEFAULT_CATEGORY_ICON } from "@/lib/icons/category-icons";
 
 type CategoryType = "INCOME" | "EXPENSE";
 

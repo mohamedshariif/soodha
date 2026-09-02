@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { createCategory } from "./actions";
 import { useToast } from "@/components/ui/toast-provider";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { CATEGORY_COLORS } from "@/lib/category-colors";
+import { CATEGORY_COLORS } from "@/lib/colors/category-colors";
 
 export function CreateCategoryForm() {
   const [isPending, startTransition] = useTransition();
