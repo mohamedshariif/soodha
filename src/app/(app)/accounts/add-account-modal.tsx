@@ -6,6 +6,8 @@ import { createAccount } from "./actions";
 import { useToast } from "@/components/ui/toast-provider";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { MOBILE_MONEY_PROVIDERS } from "@/lib/mobile-money-providers";
+import { AddButton } from "@/components/ui/add-button";
+import { FloatingActionButton } from "@/components/ui/floating-action-button";
 
 type AccountType = "CASH" | "BANK" | "MOBILE_MONEY";
 
@@ -52,12 +54,9 @@ export function AddAccountModal() {
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover"
-      >
-        Add account
-      </button>
+      <FloatingActionButton>
+        <AddButton label="Add Account" onClick={() => setIsOpen(true)} />
+      </FloatingActionButton>
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">

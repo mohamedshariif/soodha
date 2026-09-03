@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma";
 import { SavingsSummaryCards } from "./_components/savings-summary-card";
 import { SavingsGoalTabs } from "./_components/savings-goal-tabs";
 import { RecentContributions } from "./_components/recent-contributions";
-import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { PageHeader } from "@/components/ui/page-header";
 
 export const dynamic = "force-dynamic";
@@ -67,9 +66,7 @@ export default async function SavingsPage() {
         title="Savings"
         description="Create savings goals and track contribuation over time"
       >
-        <FloatingActionButton>
-          <AddSavingsGoalModal />
-        </FloatingActionButton>
+        <AddSavingsGoalModal />
       </PageHeader>
       <SavingsSummaryCards goals={savingsGoals} currency={currency} />
 

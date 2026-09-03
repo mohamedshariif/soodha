@@ -88,7 +88,7 @@ export default async function AccountsPage() {
           value={formatMoneyFromMinorUnits(totalBalanceMinor, currency)}
           helper={`${accounts.length} active account${accounts.length === 1 ? "" : "s"}`}
           valueClassName={
-            totalBalanceMinor >= zero ? "text-white" : "text-red-600"
+            totalBalanceMinor >= zero ? "text-white" : "text-red-300"
           }
           className="bg-linear-to-br from-indigo-400 via-indigo-600 to-indigo-700"
           labelClassName="text-indigo-100/80"
