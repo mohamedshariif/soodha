@@ -188,7 +188,7 @@ export function AddIncomeModal({
                 </div>
               </div>
 
-              <div className="mt-5 flex justify-end gap-3 border-t border-slate-200 pt-5">
+              <div className="mt-5 flex justify-end gap-3 border-t border-border pt-5">
                 <button
                   type="button"
                   onClick={closeModal}
@@ -203,7 +203,7 @@ export function AddIncomeModal({
                   loadingText="Saving..."
                   disabled={isPending}
                   className="
-                  rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                  rounded-lg bg-primary/70 px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover cursor-pointer"
                 >
                   Save income
                 </LoadingButton>

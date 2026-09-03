@@ -562,7 +562,7 @@ const dashboardWeeklyChartData = weekBuckets.map((bucket) => {
             accounts.length === 1 ? "" : "s"
           } · Default: ${defaultAccountName}`}
           valueClassName={
-            totalAccountBalanceMinor >= zero ? "text-white" : "text-red-600"
+            totalAccountBalanceMinor >= zero ? "text-white" : "text-red-200"
           }
           className="bg-linear-to-br from-[#1fb988] via-[#149672] to-[#065f46] shadow-sm"
           labelClassName="text-white/80 font-semibold"

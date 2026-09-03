@@ -81,8 +81,8 @@ export function AddExpenseModal({
           <div className="w-full max-w-2xl rounded-xl bg-card shadow-xl">
             <div className="flex items-start justify-between border-b border-border p-5">
               <div>
-                <h2 className="font-semibold text-slate-900">Add expense</h2>
-                <p className="mt-1 text-sm text-slate-500">
+                <h2 className="font-semibold text-foreground">Add expense</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Record money going out from one of your accounts.
                 </p>
               </div>
@@ -118,7 +118,7 @@ export function AddExpenseModal({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-foreground">
+                  <label className="text-sm font-medium text-muted-foreground">
                     Category
                   </label>
                   <select
@@ -139,7 +139,7 @@ export function AddExpenseModal({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-foreground">
+                  <label className="text-sm font-medium text-muted-foreground">
                     Account
                   </label>
                   <select
@@ -160,7 +160,7 @@ export function AddExpenseModal({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-foreground">
+                  <label className="text-sm font-medium text-muted-foreground">
                     Date
                   </label>
                   <input
@@ -172,7 +172,7 @@ export function AddExpenseModal({
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-foreground">
+                  <label className="text-sm font-medium text-muted-foreground">
                     Note
                   </label>
                   <input
@@ -196,7 +196,7 @@ export function AddExpenseModal({
                 <LoadingButton
                   isLoading={isPending}
                   loadingText="Saving..."
-                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-red-700 cursor-pointer"
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 cursor-pointer"
                 >
                   Save expense
                 </LoadingButton>
