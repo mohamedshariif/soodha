@@ -1,27 +1,23 @@
+import { ReactNode } from "react";
 import { BillCard } from "./bill-card";
 
 export function BillList({
-  title,
-  helper,
   bills,
   today,
+  emptyIcon,
   emptyText,
 }: {
-  title: string;
-  helper: string;
   bills: Parameters<typeof BillCard>[0]["bill"][];
   today: Date;
+  emptyIcon: ReactNode;
   emptyText: string;
 }) {
   return (
-    <section className="">
-      <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-foreground">{title}</h2>
-        <p className="text-sm text-muted-foreground">{helper}</p>
-      </div>
+    <section>
 
       {bills.length === 0 ? (
-        <div className="mt-4 rounded-lg bg-muted p-4">
+        <div className=" flex flex-col items-center gap-2 mt-4 rounded-lg bg-muted p-4">
+          <span>{emptyIcon}</span>
           <p className="text-sm text-muted-foreground">{emptyText}</p>
         </div>
       ) : (
