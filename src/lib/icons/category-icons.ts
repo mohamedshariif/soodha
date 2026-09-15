@@ -3,6 +3,7 @@ import {
   Briefcase,
   PlusCircle,
   Utensils,
+  Hamburger,
   Receipt,
   Circle,
   Coffee,
@@ -22,7 +23,6 @@ import {
   Baby,
   Home,
   type LucideIcon,
-  HeartPlus,
 } from "lucide-react";
 
 export const categoryIconMap: Record<string, LucideIcon> = {
@@ -30,16 +30,17 @@ export const categoryIconMap: Record<string, LucideIcon> = {
   briefcase: Briefcase,
   "plus-circle": PlusCircle,
   utensils: Utensils,
+  hamburger: Hamburger,
   receipt: Receipt,
   circle: Circle,
   coffee: Coffee,
   car: Car,
   "shopping-bag": ShoppingBag,
   "shopping-cart": ShoppingCart,
-  "heart-pluse": HeartPulse,
-  Gamepad: Gamepad2,
+  "heart-pulse": HeartPulse,
+  gamepad: Gamepad2,
   plane: Plane,
-  "gratuation-cap": GraduationCap,
+  "graduation-cap": GraduationCap,
   dumbbell: Dumbbell,
   gift: Gift,
   phone: Phone,
@@ -52,7 +53,9 @@ export const categoryIconMap: Record<string, LucideIcon> = {
 
 export const DEFAULT_CATEGORY_ICON = "circle";
 
-export function getCategoryIcon(iconName: string | null | undefined): LucideIcon {
+export function getCategoryIcon(
+  iconName: string | null | undefined,
+): LucideIcon {
   if (!iconName) return categoryIconMap[DEFAULT_CATEGORY_ICON];
   return categoryIconMap[iconName] ?? categoryIconMap[DEFAULT_CATEGORY_ICON];
 }

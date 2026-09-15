@@ -70,6 +70,3 @@ export async function getCurrentAppUser() {
 
   return appUser;
 }
-
-// If user exists → return user
-// If user does not exist → create app user, profile, preferences, and default Cash account

@@ -23,7 +23,7 @@ export function parseAmountToMinorUnits(value: string) {
 
 export function formatMoneyFromMinorUnits(
   amountMinor: bigint,
-  currency = "USD"
+  currency = "USD",
 ) {
   return new Intl.NumberFormat("en", {
     style: "currency",

@@ -3,7 +3,7 @@ export function parseDateInputToTransactionDate(value?: string | null) {
     const now = new Date();
 
     return new Date(
-      Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0, 0)
+      Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0, 0),
     );
   }
 
@@ -13,8 +13,6 @@ export function parseDateInputToTransactionDate(value?: string | null) {
 
   const [year, month, day] = value.split("-").map(Number);
 
-  // Store date-only values at noon UTC.
-  // This avoids timezone shifting the date backward or forward.
   return new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
 }
 
@@ -38,9 +36,9 @@ export function formatDateForDisplay(date: Date) {
 export function getTodayDateInputValue() {
   const now = new Date();
 
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
+  const year = now.getUTCFullYear();
+  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(now.getUTCDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
 }
@@ -48,8 +46,8 @@ export function getTodayDateInputValue() {
 export function getCurrentMonthInputValue() {
   const now = new Date();
 
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const year = now.getUTCFullYear();
+  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
 
   return `${year}-${month}`;
 }
@@ -65,8 +63,8 @@ export function parseMonthInputToBudgetPeriod(value?: string | null) {
 
   const [year, month] = monthValue.split("-").map(Number);
 
-  const periodStart = new Date(Date.UTC(year, month - 1, 1, 12, 0, 0, 0));
-  const periodEnd = new Date(Date.UTC(year, month, 0, 12, 0, 0, 0));
+  const periodStart = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
+  const periodEnd = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
   return {
     monthValue,
@@ -79,7 +77,7 @@ export function formatMonthLabel(monthValue: string) {
   const { periodStart } = parseMonthInputToBudgetPeriod(monthValue);
 
   return new Intl.DateTimeFormat("en", {
-    month: "long",
+    month: "short",
     year: "numeric",
     timeZone: "UTC",
   }).format(periodStart);
@@ -88,10 +86,13 @@ export function formatMonthLabel(monthValue: string) {
 export function addDaysUtc(date: Date, days: number) {
   return new Date(
     Date.UTC(
-      date.getFullYear(),
+      date.getUTCFullYear(),
       date.getUTCMonth(),
       date.getUTCDate() + days,
-      12, 0, 0, 0
-    )
+      12,
+      0,
+      0,
+      0,
+    ),
   );
 }
