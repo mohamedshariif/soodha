@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { ChevronDown, Star, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, Star } from "lucide-react";
 import { setDefaultAccount, archiveAccount } from "./actions";
-import { useToast } from "@/components/ui/toast-provider";
-import { ConfirmDeleteModal } from "@/components/ui/confirm-delete-modal";
+import { DeleteActionButton } from "@/components/ui/delete-action-button";
 import { getAccountTypeMeta, type AccountType } from "./account-visuals";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
+import { useServerAction } from "@/lib/use-server-action";
 
 type TransactionSummary = {
   id: string;
@@ -37,10 +37,13 @@ export function AccountCard({
   recentTransactions: TransactionSummary[];
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isSettingDefault, startSetDefaultTransition] = useTransition();
-  const [isArchiving, startArchiveTransition] = useTransition();
-  const { showToast } = useToast();
+  const { execute: setDefault, isPending: isSettingDefault } = useServerAction(
+    setDefaultAccount,
+    {
+      successTitle: "Default updated",
+      errorTitle: "Couldn't set default",
+    },
+  );
 
   const meta = getAccountTypeMeta(account.type);
   const Icon = meta.icon;
@@ -50,53 +53,11 @@ export function AccountCard({
     const formData = new FormData();
     formData.set("accountId", account.id);
 
-    startSetDefaultTransition(async () => {
-      const result = await setDefaultAccount(formData);
-
-      if (!result.ok) {
-        showToast({
-          type: "error",
-          title: "Couldn't set default",
-          message: result.message,
-        });
-        return;
-      }
-
-      showToast({
-        type: "success",
-        title: "Default updated",
-        message: result.message,
-      });
-    });
-  }
-
-  function handleConfirmArchive() {
-    const formData = new FormData();
-    formData.set("accountId", account.id);
-
-    startArchiveTransition(async () => {
-      const result = await archiveAccount(formData);
-
-      if (!result.ok) {
-        showToast({
-          type: "error",
-          title: "Couldn't remove account",
-          message: result.message,
-        });
-        return;
-      }
-
-      setIsDeleteModalOpen(false);
-      showToast({
-        type: "success",
-        title: "Account removed",
-        message: result.message,
-      });
-    });
+    setDefault(formData);
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card shadow-xs cursor-pointer transition-all duration-300 hover:shadow-md">
+    <div className="rounded-xl border border-border bg-card shadow-xs hover:shadow-md">
       <div className="p-4">
         <div>
           <div className="flex items-start gap-3">
@@ -110,11 +71,7 @@ export function AccountCard({
             <div className="w-full flex flex-col">
               <p className="font-medium text-foreground">{account.name}</p>
 
-              <p className="text-sm text-muted-foreground">
-                {meta.label}
-                {/* {account.provider ? ` · ${account.provider}` : ""} · {account.currency}
-                {account.provider ? ` · ${account.provider}` : ""} */}
-              </p>
+              <p className="text-sm text-muted-foreground">{meta.label}</p>
             </div>
 
             <div>
@@ -130,22 +87,22 @@ export function AccountCard({
                   </button>
                 )}
 
-                {!account.isDefault && (
-                  <button
-                    type="button"
-                    onClick={() => setIsDeleteModalOpen(true)}
-                    className="text-xs font-medium text-red-600 hover:text-red-700 cursor-pointer"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
-
                 {account.isDefault && (
                   <span className="flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-emerald-700">
                     <Star className="h-3 w-3 fill-primary text-primary" />
                     Default
                   </span>
                 )}
+
+                <DeleteActionButton
+                    action={archiveAccount}
+                    actionData={{ accountId: account.id }}
+                    itemName={account.name}
+                    description="If this account has transaction history, it will be archived instead of permanently deleted."
+                    successTitle="Account removed"
+                    errorTitle="Couldn't remove account"
+                    className="rounded-full text-red-600 transition hover:bg-red-50 p-1 hover:text-red-700"
+                  />
               </div>
             </div>
           </div>
@@ -191,7 +148,7 @@ export function AccountCard({
       {isExpanded && (
         <div className="border-t border-border bg-muted/40 p-4">
           {recentTransactions.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground text-center">
               No transactions yet for this account.
             </p>
           ) : (
@@ -235,15 +192,6 @@ export function AccountCard({
           )}
         </div>
       )}
-
-      <ConfirmDeleteModal
-        isOpen={isDeleteModalOpen}
-        title={`Remove "${account.name}"?`}
-        description="If this account has transaction history, it will be archived instead of permanently deleted."
-        isPending={isArchiving}
-        onConfirm={handleConfirmArchive}
-        onCancel={() => setIsDeleteModalOpen(false)}
-      />
     </div>
   );
 }
