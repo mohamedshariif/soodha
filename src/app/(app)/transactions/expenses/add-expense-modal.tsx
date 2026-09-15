@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { createExpense } from "@/app/(app)/transactions/expenses/actions";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { useToast } from "@/components/ui/toast-provider";
-import { CircleMinus, X } from "lucide-react";
+import { CircleMinus } from "lucide-react";
+import { Modal } from "@/components/ui/modal";
+import { ModalFormActions } from "@/components/ui/modal-form-actions";
+import { useServerAction } from "@/lib/use-server-action";
 
 export function AddExpenseModal({
   expenseCategories,
@@ -22,44 +23,20 @@ export function AddExpenseModal({
   today: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
-
-  const { showToast } = useToast();
+  const { execute, isPending } = useServerAction(createExpense, {
+    successTitle: "Expense saved",
+    errorTitle: "Expense not saved",
+  });
 
   const defaultAccount = accounts.find((account) => account.isDefault);
-
-  function closeModal() {
-    if (isPending) return;
-
-    setIsOpen(false);
-  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
 
-    startTransition(async () => {
-      const result = await createExpense(formData);
-
-      if (!result.ok) {
-
-        showToast({
-          type: "error",
-          title: "Expense not saved",
-          message: result.message,
-        });
-
-        return;
-      }
-
+    execute(formData, () => {
       setIsOpen(false);
-
-      showToast({
-        type: "success",
-        title: "Expense saved",
-        message: result.message,
-      });
     });
   }
 
@@ -76,55 +53,39 @@ export function AddExpenseModal({
         Add expense
       </button>
 
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="w-full max-w-2xl rounded-xl bg-card shadow-xl">
-            <div className="flex items-start justify-between border-b border-border p-5">
-              <div>
-                <h2 className="font-semibold text-foreground">Add expense</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Record money going out from one of your accounts.
-                </p>
-              </div>
+      <Modal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        title="Add expense"
+        description="Record money going out from one of your accounts."
+        width="md"
+        isDismissDisabled={isPending}
+      >
+        <form onSubmit={handleSubmit} className="p-5 pt-2">
 
-              <button
-                type="button"
-                onClick={closeModal}
-                aria-label="Close"
-                disabled={isPending}
-                className="rounded-full p-1 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <X className="size-4"/>
-              </button>
-            </div>
-
-            <form 
-              onSubmit={handleSubmit} 
-              className="p-5"
-            >
-
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-2">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Amount
-                  </label>
                   <input
                     type="number"
                     name="amount"
-                    placeholder="25.00"
+                    placeholder="Amount, e.g., 25.00"
                     className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
                     required
                   />
                 </div>
+                <div>
+                  <input
+                    name="description"
+                    placeholder="What was this for?"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-border-focus"
+                  />
+                </div>
 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Category
-                  </label>
                   <select
                     name="categoryId"
                     defaultValue=""
-                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
                     required
                   >
                     <option value="" disabled>
@@ -139,13 +100,10 @@ export function AddExpenseModal({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Account
-                  </label>
                   <select
                     name="accountId"
                     defaultValue={defaultAccount?.id ?? accounts[0]?.id}
-                    className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:border-primary"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
                   >
                     <option value="" disabled>
                       Select account
@@ -160,9 +118,6 @@ export function AddExpenseModal({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Date
-                  </label>
                   <input
                     type="date"
                     name="transactionDate"
@@ -171,10 +126,7 @@ export function AddExpenseModal({
                   />
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Note
-                  </label>
+                <div>
                   <input
                     name="note"
                     placeholder="Optional note"
@@ -183,28 +135,15 @@ export function AddExpenseModal({
                 </div>
               </div>
 
-              <div className="mt-5 flex justify-end gap-3 border-t border-border pt-5">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  disabled={isPending}
-                  className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-
-                <LoadingButton
-                  isLoading={isPending}
-                  loadingText="Saving..."
-                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 cursor-pointer"
-                >
-                  Save expense
-                </LoadingButton>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          <ModalFormActions
+            onCancel={() => setIsOpen(false)}
+            isPending={isPending}
+            submitLabel="Save expense"
+            pendingLabel="Saving..."
+            submitClassName="bg-red-600 text-white hover:bg-red-700"
+          />
+        </form>
+      </Modal>
     </>
   );
 }

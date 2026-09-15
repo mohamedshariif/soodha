@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { createIncome } from "@/app/(app)/transactions/income/actions";
-import { LoadingButton } from "@/components/ui/loading-button";
-import { useToast } from "@/components/ui/toast-provider";
-
-import { CirclePlus, X } from "lucide-react";
+import { CirclePlus } from "lucide-react";
+import { Modal } from "@/components/ui/modal";
+import { ModalFormActions } from "@/components/ui/modal-form-actions";
+import { useServerAction } from "@/lib/use-server-action";
 
 export function AddIncomeModal({
   incomeCategories,
@@ -23,43 +23,20 @@ export function AddIncomeModal({
   today: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
-
-  const { showToast } = useToast();
+  const { execute, isPending } = useServerAction(createIncome, {
+    successTitle: "Income saved",
+    errorTitle: "Income not saved",
+  });
 
   const defaultAccount = accounts.find((account) => account.isDefault);
-
-  function closeModal() {
-    if (isPending) return;
-
-    setIsOpen(false);
-  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
 
-    startTransition(async () => {
-      const result = await createIncome(formData);
-
-      if (!result.ok) {
-        showToast({
-          type: "error",
-          title: "Income not saved",
-          message: result.message,
-        });
-
-        return;
-      }
-
+    execute(formData, () => {
       setIsOpen(false);
-
-      showToast({
-        type: "success",
-        title: "Income saved",
-        message: result.message,
-      });
     });
   }
 
@@ -76,55 +53,42 @@ export function AddIncomeModal({
         Add income
       </button>
 
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="w-full max-w-2xl rounded-xl bg-card shadow-xl">
-            <div className="flex items-start justify-between border-b border-border p-5">
-              <div>
-                <h2 className="font-semibold text-foreground">Add income</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Record money coming into one of your accounts.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={closeModal}
-                disabled={isPending}
-                aria-label="Close"
-                className="rounded-full p-1 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground "
-              >
-                <X className="size-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-5">
-              <div className="grid gap-4 md:grid-cols-2">
+      <Modal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        title="Add income"
+        description="Record money coming into one of your accounts."
+        width="md"
+        isDismissDisabled={isPending}
+      >
+        <form onSubmit={handleSubmit} className="p-5 pt-2">
+              <div className="grid gap-1">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Amount
-                  </label>
                   <input
                     type="number"
                     name="amount"
                     min="0.01"
                     step="0.01"
-                    placeholder="100.00"
+                    placeholder="Amount, e.g., $100.00"
                     className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
                     required
                   />
                 </div>
+                <div>
+                  <input
+                    name="description"
+                    placeholder="What was this for?"
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-border-focus"
+                  />
+                </div>
 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Category
-                  </label>
                   <div className="relative mt-1">
                     <select
                       name="categoryId"
                       defaultValue=""
-                      className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none transition-colors
-                    hover:border-border-strong focus:border-border-focus"
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground outline-none transition-colors
+                      hover:border-border-strong focus:border-border-focus"
                       required
                     >
                       <option value="" disabled>
@@ -140,10 +104,6 @@ export function AddIncomeModal({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Account
-                  </label>
-
                   <select
                     name="accountId"
                     defaultValue={defaultAccount?.id ?? accounts[0]?.id}
@@ -164,9 +124,6 @@ export function AddIncomeModal({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Date
-                  </label>
                   <input
                     type="date"
                     name="transactionDate"
@@ -176,10 +133,7 @@ export function AddIncomeModal({
                   />
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Note
-                  </label>
+                <div>
                   <input
                     name="note"
                     placeholder="Optional note"
@@ -188,30 +142,14 @@ export function AddIncomeModal({
                 </div>
               </div>
 
-              <div className="mt-5 flex justify-end gap-3 border-t border-border pt-5">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  disabled={isPending}
-                  className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-
-                <LoadingButton
-                  isLoading={isPending}
-                  loadingText="Saving..."
-                  disabled={isPending}
-                  className="
-                  rounded-lg bg-primary/70 px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover cursor-pointer"
-                >
-                  Save income
-                </LoadingButton>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          <ModalFormActions
+            onCancel={() => setIsOpen(false)}
+            isPending={isPending}
+            submitLabel="Save income"
+            pendingLabel="Saving..."
+          />
+        </form>
+      </Modal>
     </>
   );
 }

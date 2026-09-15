@@ -16,6 +16,7 @@ export async function createExpense(formData: FormData): Promise<ActionResult> {
     }
 
     const amountValue = formData.get("amount")?.toString();
+    const description = formData.get("description")?.toString();
     const categoryId = formData.get("categoryId")?.toString();
     const accountId = formData.get("accountId")?.toString();
     const transactionDateValue = formData.get("transactionDate")?.toString();
@@ -76,6 +77,7 @@ export async function createExpense(formData: FormData): Promise<ActionResult> {
           categoryId: category.id,
           type: "EXPENSE",
           amountMinor,
+          description,
           currency: account.currency,
           transactionDate,
           note: note || null,
@@ -96,9 +98,9 @@ export async function createExpense(formData: FormData): Promise<ActionResult> {
       });
     });
 
-    revalidatePath("/expenses");
     revalidatePath("/dashboard");
     revalidatePath("/transactions");
+    revalidatePath("/reports");
 
     return actionSuccess("Expense was added successfully.");
   } catch (error) {
