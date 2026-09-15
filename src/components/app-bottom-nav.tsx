@@ -15,7 +15,7 @@ type MobileNavItem = {
   href: string;
   label: string;
   icon: LucideIcon;
-}
+};
 
 const mobileNavItems: MobileNavItem[] = [
   { href: "/dashboard", label: "Home", icon: Home },
@@ -41,13 +41,13 @@ export function AppBottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-1 rounded-lg px-2 py-2 text-center text-xs font-medium transition ${
+              className={`flex flex-col items-center gap-1 rounded-xl p-2 text-center text-xs font-medium transition ${
                 isActive
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-primary text-white font-semibold"
                   : "text-muted-foreground hover:bg-muted hover:text-primary-hover"
               }`}
             >
-              <Icon className="h-5 w-5"/>
+              <Icon className="h-5 w-5" />
               <span>{item.label}</span>
             </Link>
           );

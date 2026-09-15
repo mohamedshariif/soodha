@@ -2,11 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import {
-  CalendarDays,
-  Check,
-  ChevronDown,
-} from "lucide-react";
+import { CalendarDays, Check, ChevronDown } from "lucide-react";
 
 function isMonthValue(value?: string | null) {
   return Boolean(value && /^\d{4}-\d{2}$/.test(value));
@@ -53,7 +49,6 @@ function getMonthOptions(currentMonth: string) {
   });
 }
 
-
 export function MonthSelector({ value }: { value: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -69,7 +64,6 @@ export function MonthSelector({ value }: { value: string }) {
   const monthOptions = getMonthOptions(currentMonth);
 
   function changeMonth(nextValue: string) {
-
     const params = new URLSearchParams(searchParams.toString());
 
     params.set("month", nextValue);
@@ -105,22 +99,22 @@ export function MonthSelector({ value }: { value: string }) {
   return (
     <div ref={wrapperRef} className="relative w-35">
       <div className="flex items-center justify-end">
-      <button
-        type="button"
-        onClick={() => setIsOpen((current) => !current)}
-        className="flex w-full items-center justify-between rounded-full border border-border bg-card px-3 py-2 text-xs font-medium text-foreground shadow-sm transition hover:border-border-subtle focus:border-border-strong focus:outline-none"
-      >
-        <span className="flex min-w-0 items-center gap-1">
-          <CalendarDays className="w-3.5 h-3.5 shrink-0 text-primary" />
-          <span className="truncate">{formatMonthLabel(selectedValue)}</span>
-        </span>
+        <button
+          type="button"
+          onClick={() => setIsOpen((current) => !current)}
+          className="flex w-full items-center justify-between rounded-full border border-border bg-card px-3 py-2 text-xs font-medium text-foreground shadow-sm transition hover:border-border-subtle focus:border-border-strong focus:outline-none"
+        >
+          <span className="flex min-w-0 items-center gap-1">
+            <CalendarDays className="w-3.5 h-3.5 shrink-0 text-primary" />
+            <span className="truncate">{formatMonthLabel(selectedValue)}</span>
+          </span>
 
-        <ChevronDown
-          className={`w-3 h-3 shrink-0 text-muted-foreground transition ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
-      </button>
+          <ChevronDown
+            className={`w-3 h-3 shrink-0 text-muted-foreground transition ${
+              isOpen ? "rotate-180" : ""
+            }`}
+          />
+        </button>
       </div>
 
       {isOpen && (
@@ -150,7 +144,7 @@ export function MonthSelector({ value }: { value: string }) {
                 <span className="flex items-center gap-2">
                   {option.label}
                   {isCurrent && !isSelected && (
-                    <span 
+                    <span
                       className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"
                       aria-hidden="true"
                     />

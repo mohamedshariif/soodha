@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 function getTimeGreeting(date: Date) {
   const hour = date.getHours();
@@ -20,16 +20,22 @@ function getTimeGreeting(date: Date) {
   return "Good night";
 }
 
-export function TimeGreeting({ name }: { name: string }) {
-  const [greeting, setGreeting] = useState("Hello");
-
-  useEffect(() => {
-    setGreeting(getTimeGreeting(new Date()));
-  }, []);
+export function TimeGreeting({
+  name,
+  className,
+}: {
+  name: string;
+  className?: string;
+}) {
+  const greeting = useSyncExternalStore(
+    () => () => undefined,
+    () => getTimeGreeting(new Date()),
+    () => "Hello",
+  );
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-foreground">
+      <h1 className={`text-xl font-bold text-foreground ${className}`}>
         {greeting}, {name}
       </h1>
     </div>

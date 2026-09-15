@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Modal } from "@/components/ui/modal";
 
 export function ConfirmActionModal({
   isOpen,
@@ -25,25 +26,35 @@ export function ConfirmActionModal({
 }) {
   if (!isOpen) return null;
 
-  const Icon = tone === "danger" ? AlertTriangle : CheckCircle2;
   const iconColor = tone === "danger" ? "text-red-600" : "text-emerald-600";
-  const confirmClassName = tone === "danger" ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-700";
+  const confirmClassName =
+    tone === "danger"
+      ? "bg-red-600 hover:bg-red-700"
+      : "bg-emerald-600 hover:bg-emerald-700";
+  const headerAdornment =
+    tone === "danger" ? (
+      <div className={`rounded-lg bg-muted p-2 ${iconColor}`}>
+        <AlertTriangle className="h-5 w-5" />
+      </div>
+    ) : (
+      <div className={`rounded-lg bg-muted p-2 ${iconColor}`}>
+        <CheckCircle2 className="h-5 w-5" />
+      </div>
+    );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
-      <div className="w-full max-w-sm rounded-xl bg-card p-5 shadow-xl">
-        <div className="flex items-start gap-3">
-          <div className={`rounded-lg bg-muted p-2 ${iconColor}`}>
-            <Icon className="h-5 w-5" />
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <h2 className="font-semibold text-foreground">{title}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-          </div>
-        </div>
-
-        <div className="mt-5 flex justify-end gap-3">
+    <Modal
+      isOpen={isOpen}
+      onClose={onCancel}
+      title={title}
+      description={description}
+      width="sm"
+      headerAdornment={headerAdornment}
+      showCloseButton={false}
+      isDismissDisabled={isPending}
+    >
+      <div className="p-4">
+        <div className="flex justify-end gap-3">
           <button
             type="button"
             onClick={onCancel}
@@ -63,6 +74,6 @@ export function ConfirmActionModal({
           </button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }

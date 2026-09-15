@@ -59,9 +59,7 @@ export function AppSidebar() {
                   : "text-muted-foreground hover:bg-muted hover:text-primary-hover"
               }`}
             >
-              <Icon 
-                className="h-5 w-5 shrink-0" 
-              />
+              <Icon className="h-5 w-5 shrink-0" />
               <span>{item.label}</span>
             </Link>
           );
