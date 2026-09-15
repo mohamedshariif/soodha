@@ -6,7 +6,6 @@ import {
   HandCoins,
   CreditCard,
   Wallet,
-  ReceiptText,
 } from "lucide-react";
 
 type ManageItems = {
