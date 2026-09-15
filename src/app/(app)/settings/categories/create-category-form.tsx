@@ -19,12 +19,20 @@ export function CreateCategoryForm() {
       const result = await createCategory(formData);
 
       if (!result.ok) {
-        showToast({ type: "error", title: "Category not created", message: result.message });
+        showToast({
+          type: "error",
+          title: "Category not created",
+          message: result.message,
+        });
         return;
       }
 
       form.reset();
-      showToast({ type: "success", title: "Category created", message: result.message });
+      showToast({
+        type: "success",
+        title: "Category created",
+        message: result.message,
+      });
     });
   }
 
