@@ -57,14 +57,20 @@ export function AddIncomeModal({
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         title="Add income"
-        description="Record money coming into one of your accounts."
         width="md"
         isDismissDisabled={isPending}
       >
         <form onSubmit={handleSubmit} className="p-5 pt-2">
               <div className="grid gap-1">
                 <div>
+                  <label 
+                    htmlFor="amount"
+                    className="text-muted-foreground text-xs font-semibold"
+                  >
+                    Amount
+                  </label>
                   <input
+                    id="amount"
                     type="number"
                     name="amount"
                     min="0.01"
@@ -75,7 +81,14 @@ export function AddIncomeModal({
                   />
                 </div>
                 <div>
+                  <label 
+                    htmlFor="description"
+                    className="text-muted-foreground text-xs font-semibold"
+                  >
+                    Description
+                  </label>
                   <input
+                    id="description"
                     name="description"
                     placeholder="What was this for?"
                     className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-border-focus"
@@ -83,12 +96,18 @@ export function AddIncomeModal({
                 </div>
 
                 <div>
-                  <div className="relative mt-1">
+                  <div>
+                    <label 
+                    htmlFor="category"
+                    className="text-muted-foreground text-xs font-semibold"
+                  >
+                    Category
+                  </label>
                     <select
+                      id="category"
                       name="categoryId"
                       defaultValue=""
-                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground outline-none transition-colors
-                      hover:border-border-strong focus:border-border-focus"
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
                       required
                     >
                       <option value="" disabled>
@@ -104,7 +123,14 @@ export function AddIncomeModal({
                 </div>
 
                 <div>
+                  <label 
+                    htmlFor="account"
+                    className="text-muted-foreground text-xs font-semibold"
+                  >
+                    Account
+                  </label>
                   <select
+                    id="account"
                     name="accountId"
                     defaultValue={defaultAccount?.id ?? accounts[0]?.id}
                     className="mt-1 w-full rounded-lg border border-border text-foreground px-3 py-2 text-sm outline-none transition-colors
@@ -124,7 +150,14 @@ export function AddIncomeModal({
                 </div>
 
                 <div>
+                  <label 
+                    htmlFor="date"
+                    className="text-muted-foreground text-xs font-semibold"
+                  >
+                    Date
+                  </label>
                   <input
+                    id="date"
                     type="date"
                     name="transactionDate"
                     defaultValue={today}
@@ -134,7 +167,14 @@ export function AddIncomeModal({
                 </div>
 
                 <div>
+                  <label 
+                    htmlFor="note"
+                    className="text-muted-foreground text-xs font-semibold"
+                  >
+                    Note
+                  </label>
                   <input
+                    id="note"
                     name="note"
                     placeholder="Optional note"
                     className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-border-focus"

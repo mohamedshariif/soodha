@@ -57,7 +57,6 @@ export function AddExpenseModal({
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         title="Add expense"
-        description="Record money going out from one of your accounts."
         width="md"
         isDismissDisabled={isPending}
       >
@@ -65,16 +64,32 @@ export function AddExpenseModal({
 
               <div className="grid gap-2">
                 <div>
+                  <label 
+                    htmlFor="amount"
+                    className="text-muted-foreground text-xs font-semibold"
+                  >
+                    Amount
+                  </label>
                   <input
+                    id="amount"
                     type="number"
                     name="amount"
+                    min="0.01"
+                    step="0.01"
                     placeholder="Amount, e.g., 25.00"
                     className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
                     required
                   />
                 </div>
                 <div>
+                  <label 
+                    htmlFor="description"
+                    className="text-muted-foreground text-xs font-semibold"
+                  >
+                    Description
+                  </label>
                   <input
+                    id="description"
                     name="description"
                     placeholder="What was this for?"
                     className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-border-focus"
@@ -82,7 +97,14 @@ export function AddExpenseModal({
                 </div>
 
                 <div>
+                  <label 
+                    htmlFor="category"
+                    className="text-muted-foreground text-xs font-semibold"
+                  >
+                    Category
+                  </label>
                   <select
+                    id="category"
                     name="categoryId"
                     defaultValue=""
                     className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
@@ -100,7 +122,14 @@ export function AddExpenseModal({
                 </div>
 
                 <div>
+                  <label 
+                    htmlFor="account"
+                    className="text-muted-foreground text-xs font-semibold"
+                  >
+                    Account
+                  </label>
                   <select
+                    id="account"
                     name="accountId"
                     defaultValue={defaultAccount?.id ?? accounts[0]?.id}
                     className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
@@ -118,7 +147,14 @@ export function AddExpenseModal({
                 </div>
 
                 <div>
+                  <label 
+                    htmlFor="date"
+                    className="text-muted-foreground text-xs font-semibold"
+                  >
+                    Date
+                  </label>
                   <input
+                    id="date"
                     type="date"
                     name="transactionDate"
                     defaultValue={today}
@@ -127,7 +163,14 @@ export function AddExpenseModal({
                 </div>
 
                 <div>
+                  <label 
+                    htmlFor="note"
+                    className="text-muted-foreground text-xs font-semibold"
+                  >
+                    Note
+                  </label>
                   <input
+                    id="note"
                     name="note"
                     placeholder="Optional note"
                     className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"

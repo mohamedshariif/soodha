@@ -2,7 +2,7 @@ import { AddExpenseModal } from "@/app/(app)/transactions/expenses/add-expense-m
 import { AddIncomeModal } from "@/app/(app)/transactions/income/add-income-modal";
 import { TransactionsFilterForm } from "./transactions-filter-form";
 import { TransactionRow } from "./_components/transaction-row";
-import { PaginationControls } from "./_components/pagination-controls.tsx";
+import { PaginationControls } from "./_components/pagination-controls";
 import { getTodayDateInputValue } from "@/lib/date";
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { prisma } from "@/lib/prisma";
@@ -25,8 +25,14 @@ function getPageNumber(value?: string) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
 }
 
-function isTransactionType(value?: string): value is TransactionFilterType {
-  return value === "INCOME" || value === "EXPENSE" || value === "TRANSFER";
+function isTransactionType(
+  value?: string,
+): value is TransactionFilterType {
+  return (
+    value === "INCOME" ||
+    value === "EXPENSE" ||
+    value === "TRANSFER"
+  );
 }
 
 function buildPageHref(
@@ -45,6 +51,7 @@ function buildPageHref(
   if (page > 1) params.set("page", String(page));
 
   const query = params.toString();
+
   return query ? `/transactions?${query}` : "/transactions";
 }
 
@@ -55,7 +62,9 @@ export default async function TransactionsPage({
 }) {
   const appUser = await getCurrentAppUser();
 
-  if (!appUser) throw new Error("You must be signed in.");
+  if (!appUser) {
+    throw new Error("You must be signed in.");
+  }
 
   const filters = await searchParams;
 
@@ -66,54 +75,99 @@ export default async function TransactionsPage({
   )
     ? filters.type
     : "";
+
   const search = filters.search?.trim() ?? "";
   const selectedCategoryId = filters.categoryId ?? "";
-  const currentPage = getPageNumber(filters.page);
+  const requestedPage = getPageNumber(filters.page);
 
   const [accounts, categories] = await Promise.all([
     prisma.account.findMany({
-      where: { userId: appUser.id, status: "ACTIVE", deletedAt: null },
+      where: {
+        userId: appUser.id,
+        status: "ACTIVE",
+        deletedAt: null,
+      },
       orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
     }),
 
     prisma.category.findMany({
-      where: { userId: appUser.id, status: "ACTIVE", deletedAt: null },
-      orderBy: [{ type: "asc" }, { isDefault: "desc" }, { name: "asc" }],
+      where: {
+        userId: appUser.id,
+        status: "ACTIVE",
+        deletedAt: null,
+      },
+      orderBy: [
+        { type: "asc" },
+        { isDefault: "desc" },
+        { name: "asc" },
+      ],
     }),
   ]);
 
   const validCategoryId =
     selectedType === "TRANSFER"
       ? ""
-      : categories.some((category) => category.id === selectedCategoryId)
+      : categories.some(
+            (category) => category.id === selectedCategoryId,
+          )
         ? selectedCategoryId
         : "";
 
-  const transactions = await prisma.transaction.findMany({
-    where: {
-      userId: appUser.id,
-      status: "ACTIVE",
-      deletedAt: null,
-      ...(selectedType ? { type: selectedType } : {}),
-      ...(validCategoryId ? { categoryId: validCategoryId } : {}),
-      ...(search
-        ? {
-            OR: [
-              { description: { contains: search, mode: "insensitive" } },
-              { note: { contains: search, mode: "insensitive" } },
-            ],
-          }
-        : {}),
-    },
-    include: { category: true, account: true },
-    orderBy: { transactionDate: "desc" },
-    skip: (currentPage - 1) * PAGE_SIZE,
-    take: PAGE_SIZE + 1,
+  const transactionWhere = {
+    userId: appUser.id,
+    status: "ACTIVE" as const,
+    deletedAt: null,
+    ...(selectedType ? { type: selectedType } : {}),
+    ...(validCategoryId ? { categoryId: validCategoryId } : {}),
+    ...(search
+      ? {
+          OR: [
+            {
+              description: {
+                contains: search,
+                mode: "insensitive" as const,
+              },
+            },
+            {
+              note: {
+                contains: search,
+                mode: "insensitive" as const,
+              },
+            },
+          ],
+        }
+      : {}),
+  };
+
+  const totalTransactions = await prisma.transaction.count({
+    where: transactionWhere,
   });
 
-  const hasNextPage = transactions.length > PAGE_SIZE;
-  const pageTransactions = transactions.slice(0, PAGE_SIZE);
+  const totalPages = Math.ceil(totalTransactions / PAGE_SIZE);
+
+  const currentPage =
+    totalPages === 0
+      ? 1
+      : Math.min(requestedPage, totalPages);
+
+  const [transactions] = await Promise.all([
+    prisma.transaction.findMany({
+      where: transactionWhere,
+      include: {
+        category: true,
+        account: true,
+      },
+      orderBy: [
+        { transactionDate: "desc" },
+        { id: "desc" },
+      ],
+      skip: (currentPage - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+  ]);
+
   const hasPreviousPage = currentPage > 1;
+  const hasNextPage = currentPage < totalPages;
 
   const filterState = {
     type: selectedType,
@@ -123,11 +177,17 @@ export default async function TransactionsPage({
 
   const incomeCategories = categories
     .filter((category) => category.type === "INCOME")
-    .map((category) => ({ id: category.id, name: category.name }));
+    .map((category) => ({
+      id: category.id,
+      name: category.name,
+    }));
 
   const expenseCategories = categories
     .filter((category) => category.type === "EXPENSE")
-    .map((category) => ({ id: category.id, name: category.name }));
+    .map((category) => ({
+      id: category.id,
+      name: category.name,
+    }));
 
   const accountOptions = accounts.map((acc) => ({
     id: acc.id,
@@ -145,14 +205,20 @@ export default async function TransactionsPage({
           name: category.name,
           type: category.type,
         }))}
-        filters={{ search, type: selectedType, categoryId: validCategoryId }}
+        filters={{
+          search,
+          type: selectedType,
+          categoryId: validCategoryId,
+        }}
       />
+
       <div className="mt-3 flex flex-wrap gap-2">
         <AddIncomeModal
           incomeCategories={incomeCategories}
           accounts={accountOptions}
           today={today}
         />
+
         <AddExpenseModal
           expenseCategories={expenseCategories}
           accounts={accountOptions}
@@ -162,20 +228,25 @@ export default async function TransactionsPage({
 
       <section className="mt-4 rounded-xl border border-border bg-card p-5">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-foreground">Transaction results</h2>
+          <h2 className="font-semibold text-foreground">
+            Transaction results
+          </h2>
+
           <p className="text-sm text-muted-foreground">
-            {pageTransactions.length} record
-            {pageTransactions.length === 1 ? "" : "s"} · Page {currentPage}
+            {transactions.length} record
+            {transactions.length === 1 ? "" : "s"} · Page{" "}
+            {currentPage}
+            {totalPages > 0 ? ` of ${totalPages}` : ""}
           </p>
         </div>
 
         <div className="mt-4 space-y-2">
-          {pageTransactions.length === 0 ? (
+          {transactions.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No transactions match your filters.
             </p>
           ) : (
-            pageTransactions.map((transaction) => (
+            transactions.map((transaction) => (
               <TransactionRow
                 key={transaction.id}
                 transaction={transaction}
@@ -190,10 +261,21 @@ export default async function TransactionsPage({
         </div>
 
         <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
           hasPreviousPage={hasPreviousPage}
           hasNextPage={hasNextPage}
-          previousHref={buildPageHref(filterState, currentPage - 1)}
-          nextHref={buildPageHref(filterState, currentPage + 1)}
+          previousHref={buildPageHref(
+            filterState,
+            currentPage - 1,
+          )}
+          nextHref={buildPageHref(
+            filterState,
+            currentPage + 1,
+          )}
+          getPageHref={(page) =>
+            buildPageHref(filterState, page)
+          }
         />
       </section>
     </div>
