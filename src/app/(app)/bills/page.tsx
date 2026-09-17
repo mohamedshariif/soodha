@@ -67,16 +67,6 @@ export default async function BillsPage() {
       }),
     ]);
 
-  console.log("periodStart:", periodStart.toISOString());
-  console.log("periodEnd:", periodEnd.toISOString());
-  console.log(
-    "bills:",
-    bills.map((b) => ({
-      name: b.name,
-      nextDueDate: b.nextDueDate.toISOString(),
-    })),
-  );
-
   const expenseCategoryOptions = expenseCategories.map((category) => ({
     id: category.id,
     name: category.name,
