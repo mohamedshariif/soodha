@@ -48,7 +48,6 @@ export function SavingsGoalTabs({
 
       {tab === "active" ? (
         <SavingsGoalList
-          title="Active goals"
           goals={activeGoals}
           today={today}
           canContribute
@@ -57,7 +56,6 @@ export function SavingsGoalTabs({
         />
       ) : (
         <SavingsGoalList
-          title="Compeleted goals"
           goals={completedGoals}
           today={today}
           canContribute={false}
