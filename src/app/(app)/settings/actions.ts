@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@/generated/prisma/client";
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { prisma } from "@/lib/prisma";
 import {
@@ -27,7 +28,9 @@ export async function updateProfileDisplayName(
 
     const rawFullName = formData.get("fullName")?.toString();
 
-    if (!rawFullName?.trim()) throw new Error("Display name is required.");
+    if (!rawFullName?.trim()) {
+      throw new Error("Display name is required.");
+    }
 
     const fullName = normalizeText(rawFullName);
 
@@ -52,7 +55,9 @@ export async function updateDefaultCurrency(
   try {
     const appUser = await getCurrentAppUser();
 
-    if (!appUser) throw new Error("You must be signed in.");
+    if (!appUser) {
+      throw new Error("You must be signed in.");
+    }
 
     const currency = formData.get("defaultCurrency")?.toString();
 
@@ -60,61 +65,91 @@ export async function updateDefaultCurrency(
       throw new Error("Unsupported currency.");
     }
 
-    const [transactionCount, defaultAccount] = await Promise.all([
-      prisma.transaction.count({
-        where: {
-          userId: appUser.id,
-          deletedAt: null,
-        },
-      }),
+    const maxRetries = 3;
 
-      prisma.account.findFirst({
-        where: {
-          userId: appUser.id,
-          isDefault: true,
-          status: "ACTIVE",
-          deletedAt: null,
-        },
-      }),
-    ]);
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await prisma.$transaction(
+          async (tx) => {
+            const [transactionCount, defaultAccount] =
+              await Promise.all([
+                tx.transaction.count({
+                  where: {
+                    userId: appUser.id,
+                    deletedAt: null,
+                  },
+                }),
 
-    const accountBalanceMinor =
-      defaultAccount?.currentBalanceMinor ?? BigInt(0);
+                tx.account.findFirst({
+                  where: {
+                    userId: appUser.id,
+                    isDefault: true,
+                    status: "ACTIVE",
+                    deletedAt: null,
+                  },
+                }),
+              ]);
 
-    if (transactionCount > 0 || accountBalanceMinor !== BigInt(0)) {
-      throw new Error(
-        "Currency can only be changed before transactions or account balance exist.",
-      );
+            const accountBalanceMinor =
+              defaultAccount?.currentBalanceMinor ?? BigInt(0);
+
+            if (
+              transactionCount > 0 ||
+              accountBalanceMinor !== BigInt(0)
+            ) {
+              throw new Error(
+                "Currency can only be changed before transactions or account balance exist.",
+              );
+            }
+
+            await tx.userPreference.upsert({
+              where: { userId: appUser.id },
+              update: { defaultCurrency: currency },
+              create: {
+                userId: appUser.id,
+                defaultCurrency: currency,
+                language: "en",
+                theme: "SYSTEM",
+              },
+            });
+
+            await tx.account.updateMany({
+              where: {
+                userId: appUser.id,
+                isDefault: true,
+                status: "ACTIVE",
+                deletedAt: null,
+              },
+              data: { currency },
+            });
+          },
+          {
+            isolationLevel:
+              Prisma.TransactionIsolationLevel.Serializable,
+          },
+        );
+
+        revalidatePath("/settings");
+        revalidatePath("/dashboard");
+        revalidatePath("/transactions");
+
+        return actionSuccess(
+          `Default currency set to ${currency}.`,
+        );
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2034" &&
+          attempt < maxRetries
+        ) {
+          continue;
+        }
+
+        throw error;
+      }
     }
 
-    await prisma.$transaction(async (tx) => {
-      await tx.userPreference.upsert({
-        where: { userId: appUser.id },
-        update: { defaultCurrency: currency },
-        create: {
-          userId: appUser.id,
-          defaultCurrency: currency,
-          language: "en",
-          theme: "SYSTEM",
-        },
-      });
-
-      await tx.account.updateMany({
-        where: {
-          userId: appUser.id,
-          isDefault: true,
-          status: "ACTIVE",
-          deletedAt: null,
-        },
-        data: { currency },
-      });
-    });
-
-    revalidatePath("/settings");
-    revalidatePath("/dashboard");
-    revalidatePath("/transactions");
-
-    return actionSuccess(`Default currency set to ${currency}.`);
+    throw new Error("Could not safely update currency.");
   } catch (error) {
     return actionError(error, "Could not update currency.");
   }

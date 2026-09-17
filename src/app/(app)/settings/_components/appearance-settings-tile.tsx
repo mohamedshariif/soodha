@@ -1,17 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import { Palette } from "lucide-react";
 import { SettingsCard } from "./settings-card";
 
+const emptySubscribe = () => () => {};
+
+const getClientSnapshot = () => true;
+
+const getServerSnapshot = () => false;
+
 export function AppearanceSettingstile() {
   const { theme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
 
   const displayLabel = !mounted
     ? "Loading..."
@@ -29,7 +36,7 @@ export function AppearanceSettingstile() {
     <SettingsCard
       icon={Palette}
       title="Appearance"
-      description={`${displayLabel}. ${sourceLabel}`}
+      description={`${displayLabel}.${sourceLabel}`}
     />
   );
 }
