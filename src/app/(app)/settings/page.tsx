@@ -1,4 +1,4 @@
-import { Globe2, LockKeyhole, Palette, Tags } from "lucide-react";
+import { Globe2, LockKeyhole, Tags } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { SettingsCard } from "./_components/settings-card";
 import { ProfileSettingsTile } from "./_components/profile-settings-tile";

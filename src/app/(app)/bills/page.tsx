@@ -1,4 +1,4 @@
-import { Receipt, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
+import { Receipt, CheckCircle2, AlertTriangle } from "lucide-react";
 import { AddBillModal } from "./add-bill-modal";
 import {
   getTodayDateInputValue,

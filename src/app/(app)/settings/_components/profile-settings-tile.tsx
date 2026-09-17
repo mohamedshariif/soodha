@@ -7,7 +7,6 @@ import { Modal } from "@/components/ui/modal";
 import { ModalFormActions } from "@/components/ui/modal-form-actions";
 import { useToast } from "@/components/ui/toast-provider";
 import { updateProfileDisplayName } from "../actions";
-import { X } from "lucide-react";
 
 export function ProfileSettingsTile({
   fullName,

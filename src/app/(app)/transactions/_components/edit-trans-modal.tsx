@@ -5,7 +5,7 @@ import { useToast } from "@/components/ui/toast-provider";
 import { formatMinorUnitsForInput } from "@/lib/money";
 import { formatDateForInput } from "@/lib/date";
 import { updateTransaction } from "../actions";
-import { SquarePen, X } from "lucide-react";
+import { SquarePen } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { ModalFormActions } from "@/components/ui/modal-form-actions";
 

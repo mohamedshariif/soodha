@@ -2,14 +2,12 @@ import { SavingsGoalCard } from "./savings-goal-card";
 import { ReactNode } from "react";
 
 export function SavingsGoalList({
-  title,
   goals,
   today,
   canContribute,
   emptyIcon,
   emptyText,
 }: {
-  title: string;
   goals: Parameters<typeof SavingsGoalCard>[0]["goal"][];
   today: string;
   canContribute: boolean;
