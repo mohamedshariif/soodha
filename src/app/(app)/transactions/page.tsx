@@ -108,7 +108,9 @@ export default async function TransactionsPage({
     selectedType === "TRANSFER"
       ? ""
       : categories.some(
-            (category) => category.id === selectedCategoryId,
+            (category) => 
+              category.id === selectedCategoryId && 
+              (!selectedType || category.type === selectedType),
           )
         ? selectedCategoryId
         : "";
