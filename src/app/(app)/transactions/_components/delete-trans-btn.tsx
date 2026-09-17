@@ -1,15 +1,15 @@
-import { useState, useTransition } from "react";
-import { Trash2 } from "lucide-react";
-import { ConfirmDeleteModal } from "@/components/ui/confirm-delete-modal";
-import { useToast } from "@/components/ui/toast-provider";
-import { archiveSavingsGoal } from "../actions";
+"use client";
 
-export function DeleteGoalButton({
-  goalId,
-  goalName,
+import { useState, useTransition } from "react";
+import { ConfirmActionModal } from "@/components/ui/confirm-action-modal";
+import { useToast } from "@/components/ui/toast-provider";
+import { cancelTransaction } from "../actions";
+import { Trash2 } from "lucide-react";
+
+export function DeleteTransactionButton({
+  transactionId,
 }: {
-  goalId: string;
-  goalName: string;
+  transactionId: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -17,15 +17,15 @@ export function DeleteGoalButton({
 
   function handleConfirm() {
     const formData = new FormData();
-    formData.set("savingsGoalId", goalId);
+    formData.set("transactionId", transactionId);
 
     startTransition(async () => {
-      const result = await archiveSavingsGoal(formData);
+      const result = await cancelTransaction(formData);
 
       if (!result.ok) {
         showToast({
           type: "error",
-          title: "Couldn't delete goal",
+          title: "Couldn't delete transaction",
           message: result.message,
         });
         return;
@@ -34,7 +34,7 @@ export function DeleteGoalButton({
       setIsOpen(false);
       showToast({
         type: "success",
-        title: "Goal deleted",
+        title: "Transaction deleted",
         message: result.message,
       });
     });
@@ -45,16 +45,19 @@ export function DeleteGoalButton({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="cursor-pointer text-red-500"
-        aria-label={`Delete ${goalName}`}
+        aria-label="Delete transacton"
+        className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-red-600"
       >
-        <Trash2 className="w-4 h-4" />
+        <Trash2 className="h-4 w-4" />
       </button>
 
-      <ConfirmDeleteModal
+      <ConfirmActionModal
         isOpen={isOpen}
-        title={`Delete "${goalName}"?`}
-        description="Goals wirh contributon hsitory are archived; goals with no contribution are deleted. "
+        tone="danger"
+        title="Delete this transaction?"
+        description="Your account balance will be adjusted to reflect the removal."
+        confirmLabel="Delete"
+        pendingLabel="Deleting..."
         isPending={isPending}
         onConfirm={handleConfirm}
         onCancel={() => setIsOpen(false)}

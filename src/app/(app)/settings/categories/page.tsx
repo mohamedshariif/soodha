@@ -27,11 +27,17 @@ export default async function CategoriesPage() {
         Manage your income and expense categories.
       </p>
 
-     <CreateCategoryForm />
+      <CreateCategoryForm />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <CategoryListSection title="Income categories" categories={incomeCategories} />
-        <CategoryListSection title="Expense categories" categories={expenseCategories} />
+        <CategoryListSection
+          title="Income categories"
+          categories={incomeCategories}
+        />
+        <CategoryListSection
+          title="Expense categories"
+          categories={expenseCategories}
+        />
       </div>
     </div>
   );

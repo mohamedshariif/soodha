@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -85,26 +87,20 @@ function MoneyTooltip({ active, payload, label, currency }: TooltipProps) {
       <div className="space-y-1">
         {payload.map((item) => {
           const isIncome = item.name === "income" || item.name === "Income";
-          const isExpense = item.name === "expense" || item.name === "Expense" || item.name === "Expenses";
+          const isExpense =
+            item.name === "expense" || item.name === "Expense" || item.name === "Expenses";
 
-          const valueColor = isIncome
-            ? "text-primary"
-            : isExpense
-              ? "text-red-600"
-              : "text-foreground"
-          
+          const valueColor = isIncome ? "text-primary" : isExpense ? "text-red-600" : "text-foreground";
+
           return (
-          <div
-            key={`${item.name}-${item.value}`}
-            className="flex items-center justify-between gap-4"
-          >
-            <span className="text-muted-foreground">
-              {isIncome ? "Income" : isExpense ? "Expenses" : item.name}
-            </span>
-            <span className={`font-medium ${valueColor}`}>
-              {formatChartMoney(Number(item.value ?? 0), currency)}
-            </span>
-          </div>
+            <div key={`${item.name}-${item.value}`} className="flex items-center justify-between gap-4">
+              <span className="text-muted-foreground">
+                {isIncome ? "Income" : isExpense ? "Expenses" : item.name}
+              </span>
+              <span className={`font-medium ${valueColor}`}>
+                {formatChartMoney(Number(item.value ?? 0), currency)}
+              </span>
+            </div>
           );
         })}
       </div>
@@ -122,10 +118,7 @@ function OrderedLegend() {
     <ul className="flex items-center justify-center gap-4 pt-2">
       {items.map((item) => (
         <li key={item.value} className="flex items-center gap-1.5 text-md text-muted-foreground">
-          <span
-            className="h-2.5 w-2.5 rounded-full"
-            style={{ backgroundColor: item.color }}
-          />
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
           {item.value}
         </li>
       ))}
@@ -133,21 +126,15 @@ function OrderedLegend() {
   );
 }
 
-export function DashboardIncomeExpenseChart({
-  data,
-  currency,
-}: {
-  data: WeeklyChartDatum[];
-  currency: string;
-}) {
+export function DashboardIncomeExpenseChart({ data, currency }: { data: WeeklyChartDatum[]; currency: string }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-        <XAxis 
-          dataKey="week" 
-          tickLine={false} 
+        <XAxis
+          dataKey="week"
+          tickLine={false}
           axisLine={false}
-          tick={{ fill: "var(--color-muted-foreground)", fontSize: 14 }} 
+          tick={{ fill: "var(--color-muted-foreground)", fontSize: 14 }}
         />
         <YAxis
           tickLine={false}
@@ -155,66 +142,77 @@ export function DashboardIncomeExpenseChart({
           tick={{ fill: "var(--color-muted-foreground)", fontSize: 14 }}
           tickFormatter={(value) => formatCompactMoney(Number(value), currency)}
         />
-        <Tooltip 
-          content={<MoneyTooltip currency={currency} />} 
-          cursor={{ fill: "var(--color-muted)", opacity: 0.7 }}
-        />
-        <Legend content={<OrderedLegend />}/>
+        <Tooltip content={<MoneyTooltip currency={currency} />} cursor={{ fill: "var(--color-muted)", opacity: 0.7 }} />
+        <Legend content={<OrderedLegend />} />
         <Bar dataKey="income" name="income" fill={emerald} radius={[4, 4, 0, 0]} />
-        
         <Bar dataKey="expense" name="expense" fill={red} radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
 }
 
-export function MonthlyCashFlowChart({
-  data,
-  currency,
-}: {
-  data: DailyCashFlowPoint[];
-  currency: string;
-}) {
+export function MonthlyCashFlowChart({ data, currency }: { data: DailyCashFlowPoint[]; currency: string }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+      <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id="incomeFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={emerald} stopOpacity={0.35} />
+            <stop offset="95%" stopColor={emerald} stopOpacity={0} />
+          </linearGradient>
+          <linearGradient id="expensesFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor={red} stopOpacity={0.3} />
+            <stop offset="95%" stopColor={red} stopOpacity={0} />
+          </linearGradient>
+        </defs>
+
+        <CartesianGrid stroke="var(--color-border)" strokeOpacity={0.5} vertical={false} />
+
         <XAxis
           dataKey="day"
           tickLine={false}
           axisLine={false}
-          interval="preserveStartEnd"
+          tick={{ fill: "var(--color-muted-foreground)", fontSize: 14 }}
         />
         <YAxis
           tickLine={false}
           axisLine={false}
+          tick={{ fill: "var(--color-muted-foreground)", fontSize: 14 }}
           tickFormatter={(value) => formatCompactMoney(Number(value), currency)}
         />
-        <Tooltip content={<MoneyTooltip currency={currency} />} />
-        <Legend />
-        <Bar dataKey="income" name="Income" fill={emerald} radius={[8, 8, 0, 0]} />
-        <Bar
+        <Tooltip content={<MoneyTooltip currency={currency} />} cursor={{ stroke: "var(--color-border)" }} />
+        <Legend content={<OrderedLegend />} />
+
+        <Area
+          type="monotone"
+          dataKey="income"
+          name="Income"
+          stroke={emerald}
+          strokeWidth={2.5}
+          fill="url(#incomeFill)"
+          dot={false}
+          activeDot={{ r: 5 }}
+        />
+        <Area
+          type="monotone"
           dataKey="expenses"
           name="Expenses"
-          fill={red}
-          radius={[8, 8, 0, 0]}
+          stroke={red}
+          strokeWidth={2.5}
+          fill="url(#expensesFill)"
+          dot={false}
+          activeDot={{ r: 5 }}
         />
-      </BarChart>
+      </AreaChart>
     </ResponsiveContainer>
   );
 }
 
-export function ExpenseCategoryDonutChart({
-  data,
-  currency,
-}: {
-  data: CategoryPoint[];
-  currency: string;
-}) {
+export function ExpenseCategoryDonutChart({ data, currency }: { data: CategoryPoint[]; currency: string }) {
   if (data.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center rounded-lg bg-slate-50">
-        <p className="text-sm text-slate-500">No expense data to chart.</p>
+      <div className="flex h-full items-center justify-center rounded-lg bg-background">
+        <p className="text-sm text-muted-foreground">No expense data to chart.</p>
       </div>
     );
   }
@@ -224,19 +222,9 @@ export function ExpenseCategoryDonutChart({
       <PieChart>
         <Tooltip content={<MoneyTooltip currency={currency} />} />
         <Legend />
-        <Pie
-          data={data}
-          dataKey="amount"
-          nameKey="name"
-          innerRadius={55}
-          outerRadius={90}
-          paddingAngle={3}
-        >
+        <Pie data={data} dataKey="amount" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={3}>
           {data.map((entry, index) => (
-            <Cell
-              key={entry.name}
-              fill={pieColors[index % pieColors.length]}
-            />
+            <Cell key={entry.name} fill={pieColors[index % pieColors.length]} />
           ))}
         </Pie>
       </PieChart>
@@ -244,44 +232,22 @@ export function ExpenseCategoryDonutChart({
   );
 }
 
-export function ManagedMovementBarChart({
-  data,
-  currency,
-}: {
-  data: BarPoint[];
-  currency: string;
-}) {
+export function ManagedMovementBarChart({ data, currency }: { data: BarPoint[]; currency: string }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart
-        data={data}
-        layout="vertical"
-        margin={{ top: 8, right: 16, left: 16, bottom: 0 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+      <BarChart data={data} layout="vertical" margin={{ top: 8, right: 16, left: 16, bottom: 0 }}>
+        <CartesianGrid stroke="var(--color-border)" strokeOpacity={0.5} horizontal={false} />
         <XAxis
           type="number"
           tickLine={false}
           axisLine={false}
           tickFormatter={(value) => formatCompactMoney(Number(value), currency)}
         />
-        <YAxis
-          type="category"
-          dataKey="name"
-          width={90}
-          tickLine={false}
-          axisLine={false}
-        />
+        <YAxis type="category" dataKey="name" width={90} tickLine={false} axisLine={false} />
         <Tooltip content={<MoneyTooltip currency={currency} />} />
         <Bar dataKey="amount" name="Amount" radius={[0, 8, 8, 0]}>
           {data.map((entry) => {
-            const fill =
-              entry.name === "Bills"
-                ? amber
-                : entry.name === "Savings"
-                  ? emerald
-                  : blue;
-
+            const fill = entry.name === "Bills" ? amber : entry.name === "Savings" ? emerald : blue;
             return <Cell key={entry.name} fill={fill} />;
           })}
         </Bar>

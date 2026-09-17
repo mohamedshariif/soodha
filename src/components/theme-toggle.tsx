@@ -1,20 +1,20 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Moon, Sun, Monitor, Check } from "lucide-react";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
 
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
   const [open, setOpen] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -42,9 +42,7 @@ export function ThemeToggle() {
   }, []);
 
   if (!mounted) {
-    return (
-      <div className="h-9 w-9 rounded-xl border border-border bg-card" />
-    );
+    return <div className="h-9 w-9 rounded-xl border border-border bg-card" />;
   }
 
   const options = [
@@ -55,7 +53,7 @@ export function ThemeToggle() {
 
   const currentOption =
     options.find((option) => option.value === theme) ?? options[2];
-  
+
   const CurrentIcon = currentOption.icon;
 
   function handleThemeChange(value: "light" | "dark" | "system") {
@@ -82,7 +80,7 @@ export function ThemeToggle() {
           focus-visible:ring-border-focus
         "
       >
-        <CurrentIcon className="size-4"/>
+        <CurrentIcon className="size-4" />
       </button>
 
       {open && (
@@ -94,7 +92,7 @@ export function ThemeToggle() {
             bg-card p-1 shadow-lg
           "
         >
-          {options.map(({ value, label, icon: Icon}) => {
+          {options.map(({ value, label, icon: Icon }) => {
             const isActive = theme === value;
 
             return (
@@ -116,14 +114,14 @@ export function ThemeToggle() {
                   }
                 `}
               >
-                <Icon className={`size-4 ${
-                  isActive ? "text-primary" : "text-muted-foreground"
-                }`}/>
+                <Icon
+                  className={`size-4 ${
+                    isActive ? "text-primary" : "text-muted-foreground"
+                  }`}
+                />
                 <span>{label}</span>
 
-                {isActive && (
-                  <Check className="ml-auto size-4 text-primary"/>
-                )}
+                {isActive && <Check className="ml-auto size-4 text-primary" />}
               </button>
             );
           })}

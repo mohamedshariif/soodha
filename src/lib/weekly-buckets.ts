@@ -21,8 +21,10 @@ function addDays(date: Date, days: number): Date {
   return result;
 }
 
-
-export function getFourWeekBuckets(periodStart: Date, periodEnd: Date): WeekBucket[] {
+export function getFourWeekBuckets(
+  periodStart: Date,
+  periodEnd: Date,
+): WeekBucket[] {
   const buckets: WeekBucket[] = [];
   let cursor = new Date(periodStart);
 
@@ -30,7 +32,9 @@ export function getFourWeekBuckets(periodStart: Date, periodEnd: Date): WeekBuck
     const isLastBucket = i === 3;
     const weekEnd = isLastBucket
       ? new Date(periodEnd)
-      : new Date(Math.min(endOfCalendarWeek(cursor).getTime(), periodEnd.getTime()));
+      : new Date(
+          Math.min(endOfCalendarWeek(cursor).getTime(), periodEnd.getTime()),
+        );
 
     buckets.push({
       weekLabel: `Week ${i + 1}`,

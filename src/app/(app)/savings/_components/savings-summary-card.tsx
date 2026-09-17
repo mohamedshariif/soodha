@@ -1,8 +1,8 @@
 import { formatMoneyFromMinorUnits } from "@/lib/money";
 import { computeSavingsTotals } from "@/lib/savings";
-import { ProgressBar } from "./progress-bar";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { SummaryCard } from "@/components/ui/summary-card";
-import { TargetIcon, HandCoins } from "lucide-react";
+import { Goal, HandCoins, Clock } from "lucide-react";
 
 export function SavingsSummaryCards({
   goals,
@@ -55,18 +55,18 @@ export function SavingsSummaryCards({
             label="Target total"
             value={formatMoneyFromMinorUnits(totalTargetMinor, currency)}
             helper={`${goals.length} goals${goals.length === 1 ? "" : "s"} tracked`}
-            icon={<TargetIcon className="w-5 h-5" />}
+            icon={<Goal className="w-5 h-5" />}
             valueClassName="text-foreground"
           />
           <SummaryCard
             label="Remaining"
             value={formatMoneyFromMinorUnits(totalRemainingMinor, currency)}
             helper={`${activeCount} active goals${activeCount === 1 ? "" : "s"}`}
-            icon={<TargetIcon className="w-5 h-5" />}
+            icon={<Clock className="w-5 h-5 text-amber-600" />}
             valueClassName={
               totalRemainingMinor > BigInt(0)
                 ? "text-amber-600"
-                : "text-slate-900"
+                : "text-foreground"
             }
           />
         </div>

@@ -129,7 +129,10 @@ export default async function AccountsPage() {
 
         <div className="mt-4 grid grid-cols-1 gap-2 lg:grid-cols-3 md:grid-cols-2">
           {accounts.length === 0 ? (
-            <EmptyState description="No accounts found. Add your first account to start tracking money." />
+              <EmptyState
+              icon={<Wallet className="w-6 h-6 text-muted-foreground"/>}
+              description="No accounts found. Add your first account to start tracking money."
+              />
           ) : (
             accounts.map((account) => (
               <AccountCard

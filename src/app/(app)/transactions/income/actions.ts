@@ -16,6 +16,7 @@ export async function createIncome(formData: FormData): Promise<ActionResult> {
     }
 
     const amountValue = formData.get("amount")?.toString();
+    const description = formData.get("description")?.toString();
     const categoryId = formData.get("categoryId")?.toString();
     const accountId = formData.get("accountId")?.toString();
     const transactionDateValue = formData.get("transactionDate")?.toString();
@@ -24,6 +25,8 @@ export async function createIncome(formData: FormData): Promise<ActionResult> {
     if (!amountValue) {
       throw new Error("Amount is required.");
     }
+    
+    if (!description) throw new Error("description is required.");
 
     if (!categoryId) {
       throw new Error("Category is required.");
@@ -75,6 +78,7 @@ export async function createIncome(formData: FormData): Promise<ActionResult> {
           categoryId: category.id,
           type: "INCOME",
           amountMinor,
+          description,
           currency: account.currency,
           transactionDate,
           note: note || null,
@@ -95,8 +99,6 @@ export async function createIncome(formData: FormData): Promise<ActionResult> {
       });
     });
 
-    revalidatePath("/income");
-    revalidatePath("/accounts");
     revalidatePath("/dashboard");
     revalidatePath("/transactions");
     revalidatePath("/reports");

@@ -6,10 +6,10 @@ type KeywordRule = {
 const KEYWORD_ICON_RULES: KeywordRule[] = [
   { keywords: ["coffee", "cafe", "starbucks"], icon: "coffee" },
   { keywords: ["car", "uber", "taxi", "transport", "fuel", "gas", "parking", "bus", "train"], icon: "car" },
-  { keywords: ["food", "restaurant", "dining", "lunch", "dinner", "breakfast", "eat"], icon: "utensils" },
+  { keywords: ["food", "lunch", "dinner", "breakfast", "eat"], icon: "utensils" },
+  { keywords: ["restaurant", "dining", "kfc", "burger"], icon: "hamburger"},
   { keywords: ["grocery", "groceries", "market", "supermarket"], icon: "shopping-cart" },
   { keywords: ["shop", "shopping", "clothes", "clothing", "mall"], icon: "shopping-bag" },
-  { keywords: ["car", "uber", "taxi", "transport", "fuel", "gas", "parking", "bus", "train"], icon: "car" },
   { keywords: ["bill", "bills", "utility", "utilities", "electric", "water"], icon: "receipt" },
   { keywords: ["health", "medical", "doctor", "pharmacy", "hospital"], icon: "heart-pulse" },
   { keywords: ["entertainment", "game", "games", "movie", "netflix", "cinema"], icon: "gamepad" },
@@ -30,11 +30,7 @@ const KEYWORD_ICON_RULES: KeywordRule[] = [
 export function suggestCategoryIcon(name: string): string {
   const normalized = name.toLowerCase();
 
-  for (const rule of KEYWORD_ICON_RULES) {
-    if (rule.keywords.some((keyword) => normalized.includes(keyword))) {
-      return rule.icon;
-    }
-  }
+  const match = KEYWORD_ICON_RULES.find((rule) => rule.keywords.some((keyword) => normalized.includes(keyword)));
 
-  return "circle";
+  return match?.icon ?? "circle";
 }

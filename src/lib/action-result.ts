@@ -10,7 +10,10 @@ export function actionSuccess(message: string): ActionResult {
   };
 }
 
-export function actionError(error: unknown, fallbackMessage: string): ActionResult {
+export function actionError(
+  error: unknown,
+  fallbackMessage: string,
+): ActionResult {
   if (error instanceof Error && error.message) {
     return {
       ok: false,

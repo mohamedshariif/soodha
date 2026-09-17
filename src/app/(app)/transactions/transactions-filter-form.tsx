@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
 
 type CategoryOption = {
   id: string;
@@ -14,15 +14,13 @@ type TransactionFilters = {
   search: string;
   type: string;
   categoryId: string;
-  from?: string;
-  to?: string;
 };
 
 function buildTransactionsUrl(filters: TransactionFilters) {
   const params = new URLSearchParams();
 
   Object.entries(filters).forEach(([key, value]) => {
-    const cleanValue = value.trim();
+    const cleanValue = value?.trim();
 
     if (cleanValue) {
       params.set(key, cleanValue);
@@ -41,11 +39,27 @@ export function TransactionsFilterForm({
   categories: CategoryOption[];
   filters: TransactionFilters;
 }) {
+  return (
+    <TransactionsFilterControls
+      key={`${filters.search}-${filters.type}-${filters.categoryId}`}
+      categories={categories}
+      filters={filters}
+    />
+  );
+}
+
+function TransactionsFilterControls({
+  categories,
+  filters,
+}: {
+  categories: CategoryOption[];
+  filters: TransactionFilters;
+}) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [searchValue, setSearchValue] = useState(filters.search);
 
-  const visibleCategories = 
+  const visibleCategories =
     filters.type === "TRANSFER"
       ? []
       : filters.type
@@ -65,10 +79,6 @@ export function TransactionsFilterForm({
   }
 
   useEffect(() => {
-    setSearchValue(filters.search);
-  }, [filters.search]);
-
-  useEffect(() => {
     const timeout = setTimeout(() => {
       if (searchValue === filters.search) {
         return;
@@ -85,107 +95,51 @@ export function TransactionsFilterForm({
     }, 400);
 
     return () => clearTimeout(timeout);
-  }, [filters, router, searchValue, startTransition]);
+  }, [filters, router, searchValue]);
 
   return (
-    <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5">
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="font-semibold text-slate-900">Filter transactions</h2>
+    <section className="mt-2 rounded-xl border border-border bg-card p-5">
+      <h2 className="font-semibold text-foreground">Filter transactions</h2>
 
-        {isPending && (
-          <p className="text-xs font-medium text-slate-500">Filtering...</p>
-        )}
-      </div>
-
-      <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <div>
-          <label className="text-sm font-medium text-slate-700">Search</label>
-          <input
-            value={searchValue}
-            onChange={(event) => setSearchValue(event.target.value)}
-            placeholder="Salary, lunch..."
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-          />
+      <div className="mt-4 grid gap-2 lg:grid-cols-3">
+        <div className="relative rounded-lg">
+          <Search className="w-4 h-4 absolute top-3 left-3 text-muted-foreground"/>
+        <input
+          value={searchValue}
+          onChange={(event) => setSearchValue(event.target.value)}
+          placeholder="Salary, lunch..."
+          className="w-full rounded-lg border border-border px-3 py-2 pl-8 text-sm outline-none focus:border-primary"
+        />
         </div>
 
-        <div>
-          <label className="text-sm font-medium text-slate-700">Type</label>
-          <select
-            value={filters.type}
-            onChange={(event) =>
-              updateFilters({
-                type: event.target.value,
-                categoryId: "",
-              })
-            }
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-          >
-            <option value="">All types</option>
-            <option value="INCOME">Income</option>
-            <option value="EXPENSE">Expense</option>
-            <option value="TRANSFER">Transfer</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="text-sm font-medium text-slate-700">
-            Category
-          </label>
-          <select
-            value={filters.categoryId}
-            onChange={(event) =>
-              updateFilters({
-                categoryId: event.target.value,
-              })
-            }
-            disabled={filters.type === "TRANSFER"}
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-          >
-            <option value="">All categories</option>
-            {visibleCategories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name} ({category.type.toLowerCase()})
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="text-sm font-medium text-slate-700">From</label>
-          <input
-            type="date"
-            value={filters.from}
-            onChange={(event) =>
-              updateFilters({
-                from: event.target.value,
-              })
-            }
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium text-slate-700">To</label>
-          <input
-            type="date"
-            value={filters.to}
-            onChange={(event) =>
-              updateFilters({
-                to: event.target.value,
-              })
-            }
-            className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
-          />
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <Link
-          href="/transactions"
-          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        <select
+          value={filters.type}
+          onChange={(event) =>
+            updateFilters({ type: event.target.value, categoryId: "" })
+          }
+          className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
         >
-          Clear filters
-        </Link>
+          <option value="">All types</option>
+          <option value="INCOME">Income</option>
+          <option value="EXPENSE">Expense</option>
+          <option value="TRANSFER">Transfer</option>
+        </select>
+
+        <select
+          value={filters.categoryId}
+          onChange={(event) =>
+            updateFilters({ categoryId: event.target.value })
+          }
+          disabled={filters.type === "TRANSFER"}
+          className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary disabled:opacity-50"
+        >
+          <option value="">All categories</option>
+          {visibleCategories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name} ({category.type.toLowerCase()})
+            </option>
+          ))}
+        </select>
       </div>
     </section>
   );

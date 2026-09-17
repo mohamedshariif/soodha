@@ -70,7 +70,7 @@ export default async function SavingsPage() {
       </PageHeader>
       <SavingsSummaryCards goals={savingsGoals} currency={currency} />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 lg:gap-3 lg:grid-cols-3">
         <div className="lg:col-span-2 min-w-0">
           <SavingsGoalTabs
             activeGoals={activeGoals}

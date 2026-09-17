@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Pencil, Trash2, Check, X } from "lucide-react";
+import { createElement, useState, useTransition } from "react";
+import { Pencil, Check, X } from "lucide-react";
 import { getCategoryIcon } from "@/lib/icons/category-icons";
 import { updateCategory, deleteCategory } from "./actions";
 import { useToast } from "@/components/ui/toast-provider";
-import { ConfirmDeleteModal } from "../../../../components/ui/confirm-delete-modal";
+import { DeleteActionButton } from "@/components/ui/delete-action-button";
 
 type Category = {
   id: string;
@@ -17,13 +17,10 @@ type Category = {
 
 export function CategoryRow({ category }: { category: Category }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isSaving, startSaveTransition] = useTransition();
-  const [isDeleting, startDeleteTransition] = useTransition();
 
   const { showToast } = useToast();
 
-  const Icon = getCategoryIcon(category.icon);
   const color = category.color ?? "#64748B";
 
   function handleUpdateSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -37,7 +34,7 @@ export function CategoryRow({ category }: { category: Category }) {
         showToast({
           type: "error",
           title: "Update failed",
-          message: result.message
+          message: result.message,
         });
         return;
       }
@@ -46,37 +43,12 @@ export function CategoryRow({ category }: { category: Category }) {
       showToast({
         type: "success",
         title: "Category updated",
-        message: result.message
+        message: result.message,
       });
     });
   }
 
-  function handleConfirmDelete() {
-    const formData = new FormData();
-    formData.set("categoryId", category.id);
-
-    startDeleteTransition(async () => {
-      const result = await deleteCategory(formData);
-
-      if (!result.ok) {
-        showToast({
-          type: "error",
-          title: "Delete failed",
-          message: result.message
-        });
-        return;
-      }
-
-      setIsDeleteModalOpen(false);
-      showToast({
-        type: "success",
-        title: "Category deleted.",
-        message: result.message
-      });
-    });
-  }
-
-   return (
+  return (
     <>
       <div className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2.5">
         <div className="flex min-w-0 items-center gap-3">
@@ -84,11 +56,17 @@ export function CategoryRow({ category }: { category: Category }) {
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
             style={{ backgroundColor: `${color}1A` }}
           >
-            <Icon className="h-4 w-4" style={{ color }} />
+            {createElement(getCategoryIcon(category.icon), {
+              className: "h-4 w-4",
+              style: { color },
+            })}
           </span>
 
           {isEditing ? (
-            <form onSubmit={handleUpdateSubmit} className="flex items-center gap-1.5">
+            <form
+              onSubmit={handleUpdateSubmit}
+              className="flex items-center gap-1.5"
+            >
               <input type="hidden" name="categoryId" value={category.id} />
               <input
                 name="name"
@@ -138,26 +116,19 @@ export function CategoryRow({ category }: { category: Category }) {
               <Pencil className="h-3.5 w-3.5" />
             </button>
 
-            <button
-              type="button"
-              onClick={() => setIsDeleteModalOpen(true)}
-              aria-label="Delete category"
-              className="rounded-full p-1.5 text-red-500 hover:bg-red-50"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            <DeleteActionButton
+              action={deleteCategory}
+              actionData={{ categoryId: category.id }}
+              itemName={category.name}
+              description="If this category is used by transactions, budgets, or bills, it will be archived instead of permanently deleted."
+              successTitle="Category removed"
+              errorTitle="Couldn't delete category"
+              ariaLabel={`Delete ${category.name}`}
+              iconClassName="h-3.5 w-3.5"
+            />
           </div>
         )}
       </div>
-
-      <ConfirmDeleteModal
-        isOpen={isDeleteModalOpen}
-        title={`Delete "${category.name}"?`}
-        description="If this category is used by any transactions, budgets, or bills, it will be archived instead of permanently deleted."
-        isPending={isDeleting}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setIsDeleteModalOpen(false)}
-      />
     </>
   );
 }

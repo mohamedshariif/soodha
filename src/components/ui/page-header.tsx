@@ -9,7 +9,7 @@ export function PageHeader({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <div>
+      <div className="hidden md:block">
         <h1 className="text-2xl font-bold text-foreground">
           {title}
         </h1>

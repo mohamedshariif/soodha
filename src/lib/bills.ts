@@ -50,11 +50,11 @@ export function sumAmountsMinor<T extends { amountMinor: bigint }>(items: T[]) {
 export function formatRepeatLabel(repeatType: string) {
   switch (repeatType) {
     case "WEEKLY":
-      return "Repeats weekly";
+      return "Weekly";
     case "MONTHLY":
-      return "Repeats monthly";
+      return "Monthly";
     case "YEARLY":
-      return "Repeats yearly";
+      return "Yearly";
     default:
       return "One-time";
   }
