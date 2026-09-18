@@ -6,6 +6,7 @@ import {
   HandCoins,
   CreditCard,
   Wallet,
+  ArrowRight,
 } from "lucide-react";
 
 type ManageItems = {
@@ -52,11 +53,11 @@ export default function ManagePage() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-foreground">Manage</h1>
-      <p className="mt-2 text-muted-foreground">
+      <p className="mt-1 text-muted-foreground">
         Add and manage the main parts of your money flow.
       </p>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
         {manageItems.map((item) => {
           const Icon = item.icon;
 
@@ -64,17 +65,22 @@ export default function ManagePage() {
           <Link
             key={item.href}
             href={item.href}
-            className="rounded-xl border border-border-subtle bg-card p-5 transition hover:border-border-strong hover:shadow-md"
+            className="group rounded-xl border border-border-subtle bg-card p-4 hover:border-border-strong hover:shadow-md hover:-translate-y-1 transition-all duration-200"
           >
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-muted p-2 text-primary">
-                <Icon className="h-5 w-5"/>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-muted p-2 text-primary">
+                  <Icon className="h-5 w-5"/>
+                </div>
+                <div>
+                  <h2 className="font-semibold text-foreground group-hover:text-primary transition-colors">{item.title}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {item.description}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="font-medium text-foreground">{item.title}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {item.description}
-                </p>
+              <div className="bg-muted rounded-lg p-1.5 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
+                <ArrowRight className="w-5 h-5"/>
               </div>
             </div>
           </Link>
