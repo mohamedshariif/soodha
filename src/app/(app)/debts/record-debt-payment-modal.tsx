@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { recordDebtPayment } from "./actions";
 import type { DebtDirection } from "@/generated/prisma/enums";
 import { Modal } from "@/components/ui/modal";

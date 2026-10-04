@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { createDebt } from "./actions";
 import type { DebtDirection } from "@/generated/prisma/enums";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
@@ -31,12 +31,6 @@ export function AddDebtModal({
 
   const isPayable = direction === "I_OWE";
 
-  function handleOpen() {
-    setDirection(defaultDirection);
-    setError(null);
-    setIsOpen(true);
-  }
-
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -50,7 +44,12 @@ export function AddDebtModal({
     <>
       <div className="flex items-center ">
         <FloatingActionButton>
-          <AddButton label="Add Debt" onClick={() => setIsOpen(true)} />
+          <AddButton
+            label="Add Debt"
+            onClick={() => {
+              setError(null)
+              setIsOpen(true)
+            } }/>
         </FloatingActionButton>
       </div>
       <Modal
