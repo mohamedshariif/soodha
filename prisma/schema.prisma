@@ -54,9 +54,7 @@ enum TransactionSourceType {
   BILL_PAYMENT
   SAVINGS_CONTRIBUTION
   DEBT_PAYMENT
-  BUDGET_ADJUSTMENT
-  AYUUTO_CONTRIBUTION
-  AYUUTO_PAYOUT
+  DEBT_COLLECTION
 }
 
 enum RepeatType {
@@ -79,6 +77,11 @@ enum SavingsGoalStatus {
   PAUSED
   CANCELLED
   ARCHIVED
+}
+
+enum DebtDirection {
+  I_OWE
+  OWED_TO_ME
 }
 
 enum DebtStatus {
@@ -357,20 +360,21 @@ model SavingsContribution {
 }
 
 model Debt {
-  id                   String     @id @default(uuid()) @db.Uuid
-  userId               String     @map("user_id") @db.Uuid
+  id                   String        @id @default(uuid()) @db.Uuid
+  userId               String        @map("user_id") @db.Uuid
+  direction            DebtDirection @default(I_OWE)
   name                 String
-  lenderName           String?    @map("lender_name")
-  originalAmountMinor  BigInt     @map("original_amount_minor")
-  remainingAmountMinor BigInt     @map("remaining_amount_minor")
-  currency             String     @db.VarChar(3)
-  dueDate              DateTime?  @map("due_date") @db.Date
-  minimumPaymentMinor  BigInt?    @map("minimum_payment_minor")
+  lenderName           String?       @map("lender_name")
+  originalAmountMinor  BigInt        @map("original_amount_minor")
+  remainingAmountMinor BigInt        @map("remaining_amount_minor")
+  currency             String        @db.VarChar(3)
+  dueDate              DateTime?     @map("due_date") @db.Date
+  minimumPaymentMinor  BigInt?       @map("minimum_payment_minor")
   note                 String?
-  status               DebtStatus @default(ACTIVE)
-  deletedAt            DateTime?  @map("deleted_at")
-  createdAt            DateTime   @default(now()) @map("created_at")
-  updatedAt            DateTime   @updatedAt @map("updated_at")
+  status               DebtStatus    @default(ACTIVE)
+  deletedAt            DateTime?     @map("deleted_at")
+  createdAt            DateTime      @default(now()) @map("created_at")
+  updatedAt            DateTime      @updatedAt @map("updated_at")
 
   user     AppUser       @relation(fields: [userId], references: [id])
   payments DebtPayment[]
@@ -379,6 +383,7 @@ model Debt {
   @@index([status])
   @@index([dueDate])
   @@index([userId, deletedAt])
+  @@index([userId, direction])
   @@map("debts")
 }
 
