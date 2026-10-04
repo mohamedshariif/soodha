@@ -5,7 +5,7 @@ export function ModalFormActions({
   isPending,
   submitLabel,
   pendingLabel,
-  submitClassName = "bg-primary text-white hover:bg-primary-hover",
+  submitClassName = "bg-primary text-primary-foreground hover:bg-primary-hover",
   isSubmitDisabled = false,
 }: {
   onCancel: () => void;

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { usePathname, useSearchParams } from "next/navigation";
 import { MonthSelector } from "@/components/month-selector";
@@ -19,8 +20,16 @@ function getHeaderDescription(pathname: string) {
     return "Plan and track your monthly spending";
   }
 
+  if (pathname === "/bills") {
+    return "Track upcoming bills before they become real expenses";
+  }
+
   if (pathname === "/savings") {
     return "Track your saving goals";
+  }
+
+  if (pathname === "/debts") {
+    return "Track your debts today";
   }
 
   return "Welcome back to Soodha";
@@ -39,11 +48,17 @@ export function AppHeader({ fullName }: { fullName: string }) {
   return (
     <header className="relative z-30 flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-4 lg:px-6">
       <div className="lg:hidden">
-        <h1 className="text-xl font-bold text-foreground">Soodha</h1>
-        <TimeGreeting
-          name={fullName}
-          className="text-xs text-muted-foreground font-semibold"
-        />
+        <Link
+          href="/dashboard"
+          className="group flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-lg font-bold text-primary-foreground shadow-md shadow-primary/20 transition-transform group-hover:scale-105">
+              S
+            </div>
+              <span className="flex items-center gap-1 text-xl font-extrabold tracking-tight text-foreground">
+              Soodha
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            </span>
+          </Link>
       </div>
 
       <div className="hidden lg:block">

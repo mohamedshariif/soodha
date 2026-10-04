@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { AddButton } from "@/components/ui/add-button";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { createBill } from "./actions";
@@ -21,7 +21,7 @@ export function AddBillModal({
   today: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const formRef = useRef<HTMLFormElement>(null);
+
   const { execute, isPending } = useServerAction(createBill, {
     successTitle: "Bill added",
     errorTitle: "Couldn't add bill",
@@ -32,7 +32,6 @@ export function AddBillModal({
     const formData = new FormData(event.currentTarget);
 
     execute(formData, () => {
-      formRef.current?.reset();
       setIsOpen(false);
     });
   }
@@ -51,13 +50,14 @@ export function AddBillModal({
         width="md"
         isDismissDisabled={isPending}
       >
-        <form ref={formRef} onSubmit={handleSubmit} className="p-5">
-          <div className="grid gap-2 md:grid-cols-2">
+        <form onSubmit={handleSubmit} className="p-5">
+          <div className="grid gap-2">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">
+              <label htmlFor="name" className="text-sm font-medium text-muted-foreground">
                 Bill name
               </label>
               <input
+                id="name"
                 name="name"
                 placeholder="e.g. Internet"
                 className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
@@ -66,10 +66,11 @@ export function AddBillModal({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-muted-foreground">
+              <label htmlFor="amount" className="text-sm font-medium text-muted-foreground">
                 Amount
               </label>
               <input
+                id="amount"
                 name="amount"
                 placeholder="30.00"
                 className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
@@ -78,10 +79,11 @@ export function AddBillModal({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-muted-foreground">
+              <label htmlFor="category" className="text-sm font-medium text-muted-foreground">
                 Expense category
               </label>
               <select
+                id="category"
                 name="categoryId"
                 className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
                 required
@@ -96,10 +98,11 @@ export function AddBillModal({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-muted-foreground">
+              <label htmlFor="date" className="text-sm font-medium text-muted-foreground">
                 Due date
               </label>
               <input
+                id="date"
                 type="date"
                 name="nextDueDate"
                 defaultValue={today}
@@ -109,10 +112,11 @@ export function AddBillModal({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-muted-foreground">
+              <label htmlFor="repeat" className="text-sm font-medium text-muted-foreground">
                 Repeat
               </label>
               <select
+                id="repeat"
                 name="repeatType"
                 defaultValue="MONTHLY"
                 className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"

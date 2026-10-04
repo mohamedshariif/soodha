@@ -34,7 +34,7 @@ export function SavingsGoalCard({
 }) {
   const { remainingMinor, progressPercent, progressWidth } =
     computeGoalProgress(goal);
-  const zero = BigInt(0);
+  const zero = 0n;
 
   return (
     <div className="rounded-lg bg-card p-4 border border-border hover:shadow-md duration-300">

@@ -34,15 +34,15 @@ export function BillTabs({
 
   return (
     <div>
-      <div className="inline-flex rounded-lg bg-muted p-0.5">
+      <div className="inline-flex rounded-full bg-muted p-0.5">
         {tabs.map((t) => (
           <button
             key={t.key}
             type="button"
             onClick={() => setTab(t.key)}
-            className={`px-3 py-1 text-sm font-medium transition-colors ${
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
               tab === t.key
-                ? "bg-card text-foreground rounded-xl shadow-sm"
+                ? "bg-card text-foreground rounded-full shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >

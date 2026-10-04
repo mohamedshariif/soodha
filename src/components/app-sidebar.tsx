@@ -39,7 +39,17 @@ export function AppSidebar() {
   return (
     <aside className="hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-card px-4 py-6 lg:flex">
       <div className="mb-8 shrink-0">
-        <h1 className="text-2xl font-bold text-foreground">Soodha</h1>
+        <Link
+          href="/"
+          className="group flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-lg font-bold text-primary-foreground shadow-md shadow-primary/20 transition-transform group-hover:scale-105">
+              S
+            </div>
+              <span className="flex items-center gap-1 text-xl font-extrabold tracking-tight text-foreground">
+              Soodha
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+            </span>
+          </Link>
       </div>
 
       <nav className="flex-1 space-y-2 overflow-y-auto">

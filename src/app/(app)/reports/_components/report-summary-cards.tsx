@@ -28,7 +28,7 @@ export function ReportSummaryCards({
         <SummaryCard
           label="Income"
           value={formatMoneyFromMinorUnits(incomeTotalMinor, currency)}
-          helper={`${incomeCount} income record${incomeCount === 1 ? "" : "s"}`}
+          helper={`${incomeCount} record${incomeCount === 1 ? "" : "s"}`}
           valueClassName="text-emerald-600"
           icon={<TrendingUp className="h-5 w-5" />}
           iconClassName="bg-muted text-primary"
@@ -37,7 +37,7 @@ export function ReportSummaryCards({
         <SummaryCard
           label="Expenses"
           value={formatMoneyFromMinorUnits(expenseTotalMinor, currency)}
-          helper={`${expenseCount} expense record${expenseCount === 1 ? "" : "s"}`}
+          helper={`${expenseCount} record${expenseCount === 1 ? "" : "s"}`}
           valueClassName="text-red-600"
           icon={<TrendingDown className="h-5 w-5" />}
           iconClassName="bg-muted text-red-600"

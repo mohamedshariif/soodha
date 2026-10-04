@@ -18,7 +18,7 @@ export default async function BudgetsPage({
   const appUser = await getCurrentAppUser();
   if (!appUser) throw new Error("You must be signed in.");
 
-  const zero = BigInt(0);
+  const zero = 0n;
   const filters = await searchParams;
   const { monthValue, periodStart, periodEnd } = parseMonthInputToBudgetPeriod(
     filters.month,

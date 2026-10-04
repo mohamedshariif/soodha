@@ -57,7 +57,7 @@ export default function ManagePage() {
         Add and manage the main parts of your money flow.
       </p>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
+      <div className="mt-4 grid gap-2 md:grid-cols-2">
         {manageItems.map((item) => {
           const Icon = item.icon;
 
@@ -67,7 +67,7 @@ export default function ManagePage() {
             href={item.href}
             className="group rounded-xl border border-border-subtle bg-card p-4 hover:border-border-strong hover:shadow-md hover:-translate-y-1 transition-all duration-200"
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-muted p-2 text-primary">
                   <Icon className="h-5 w-5"/>

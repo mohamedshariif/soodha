@@ -52,17 +52,18 @@ export function AddBudgetModal({
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         title="Set budget"
-        description="Saving again for the same category and month updates it."
+        description="Plan and track your monthly spending."
         width="md"
         isDismissDisabled={isPending}
       >
         <form ref={formRef} onSubmit={handleSubmit} className="p-5">
           <div className="grid gap-2">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">
+              <label htmlFor="month" className="text-sm font-medium text-muted-foreground">
                 Month
               </label>
               <input
+                id="month"
                 type="month"
                 name="month"
                 defaultValue={currentMonth}
@@ -72,10 +73,11 @@ export function AddBudgetModal({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-muted-foreground">
+              <label htmlFor="category" className="text-sm font-medium text-muted-foreground">
                 Expense category
               </label>
               <select
+                id="category"
                 name="categoryId"
                 className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
                 required
@@ -90,10 +92,11 @@ export function AddBudgetModal({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-muted-foreground">
+              <label htmlFor="amount" className="text-sm font-medium text-muted-foreground">
                 Budget amount
               </label>
               <input
+                id="amount"
                 name="amount"
                 placeholder="300.00"
                 className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
@@ -111,11 +114,10 @@ export function AddBudgetModal({
                     key={preset}
                     type="button"
                     onClick={() => setAlertThreshold(preset)}
-                    className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium cursor-pointer ${
-                      alertThreshold === preset
+                    className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium cursor-pointer ${alertThreshold === preset
                         ? "border-primary bg-primary/10 text-primary"
                         : "border-border text-muted-foreground hover:bg-muted"
-                    }`}
+                      }`}
                   >
                     {preset}%
                   </button>

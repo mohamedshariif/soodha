@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { createAccount } from "./actions";
 import { MOBILE_MONEY_PROVIDERS } from "@/lib/mobile-money-providers";
 import { AddButton } from "@/components/ui/add-button";
@@ -14,7 +14,6 @@ type AccountType = "CASH" | "BANK" | "MOBILE_MONEY";
 export function AddAccountModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [accountType, setAccountType] = useState<AccountType>("CASH");
-  const formRef = useRef<HTMLFormElement>(null);
   const { execute, isPending } = useServerAction(createAccount, {
     successTitle: "Account created",
     errorTitle: "Account not created",
@@ -26,7 +25,6 @@ export function AddAccountModal() {
     const formData = new FormData(event.currentTarget);
 
     execute(formData, () => {
-      formRef.current?.reset();
       setAccountType("CASH");
       setIsOpen(false);
     });
@@ -45,7 +43,7 @@ export function AddAccountModal() {
         width="md"
         isDismissDisabled={isPending}
       >
-        <form ref={formRef} onSubmit={handleSubmit} className="p-5">
+        <form onSubmit={handleSubmit} className="p-5">
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="text-xs font-medium text-muted-foreground">

@@ -9,7 +9,7 @@ export default function SignInPage() {
         signUpFallbackRedirectUrl="/dashboard"
         appearance={{
           variables: {
-            colorPrimary: "#D4A017",
+            colorPrimary: "#059669",
             borderRadius: "0.75rem",
           },
           elements: {

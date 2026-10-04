@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { addSavingsContribution } from "./actions";
 import { Modal } from "@/components/ui/modal";
 import { ModalFormActions } from "@/components/ui/modal-form-actions";
@@ -16,7 +16,7 @@ export function AddSavingsContributionModal({
   today: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const formRef = useRef<HTMLFormElement>(null);
+
   const { execute, isPending } = useServerAction(addSavingsContribution, {
     successTitle: "Contribution added",
     errorTitle: "Contribution not added",
@@ -28,7 +28,6 @@ export function AddSavingsContributionModal({
     const formData = new FormData(event.currentTarget);
 
     execute(formData, () => {
-      formRef.current?.reset();
       setIsOpen(false);
     });
   }
@@ -36,8 +35,9 @@ export function AddSavingsContributionModal({
   return (
     <>
       <button
+        type="button"
         onClick={() => setIsOpen(true)}
-        className="w-full mt-4 text-sm font-semibold rounded-lg text-primary border border-border hover:bg-primary-hover hover:text-white transition-all duration-300 py-2.5 cursor-pointer"
+        className="w-full mt-4 py-2.5 text-sm font-semibold rounded-lg bg-primary text-primary-foreground cursor-pointer"
       >
         Add Money
       </button>
@@ -50,15 +50,18 @@ export function AddSavingsContributionModal({
         width="sm"
         isDismissDisabled={isPending}
       >
-        <form ref={formRef} onSubmit={handleSubmit} className="p-5">
+        <form onSubmit={handleSubmit} className="p-5">
           <input type="hidden" name="savingsGoalId" value={savingsGoalId} />
 
           <div className="grid gap-2">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">
+              <label
+                htmlFor="amount"
+                className="text-sm font-medium text-muted-foreground">
                 Amount
               </label>
               <input
+                id="amount"
                 name="amount"
                 placeholder="50.00"
                 className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
@@ -67,10 +70,13 @@ export function AddSavingsContributionModal({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-muted-foreground">
+              <label
+                htmlFor="date"
+                className="text-sm font-medium text-muted-foreground">
                 Date
               </label>
               <input
+                id="date"
                 type="date"
                 name="contributionDate"
                 defaultValue={today}
@@ -79,10 +85,13 @@ export function AddSavingsContributionModal({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-muted-foreground">
+              <label
+                htmlFor="note"
+                className="text-sm font-medium text-muted-foreground">
                 Note
               </label>
               <input
+              id="note"
                 name="note"
                 placeholder="Optional note"
                 className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"

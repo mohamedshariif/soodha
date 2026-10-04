@@ -1,38 +1,24 @@
 "use client";
 
-import { useTransition } from "react";
 import { createCategory } from "./actions";
-import { useToast } from "@/components/ui/toast-provider";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { CATEGORY_COLORS } from "@/lib/colors/category-colors";
+import { useServerAction } from "@/lib/use-server-action";
 
 export function CreateCategoryForm() {
-  const [isPending, startTransition] = useTransition();
-  const { showToast } = useToast();
+  const { execute, isPending } = useServerAction(createCategory, {
+    successTitle: "Category created",
+    errorTitle: "Category not created"
+  });
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     const formData = new FormData(event.currentTarget);
     const form = event.currentTarget;
 
-    startTransition(async () => {
-      const result = await createCategory(formData);
-
-      if (!result.ok) {
-        showToast({
-          type: "error",
-          title: "Category not created",
-          message: result.message,
-        });
-        return;
-      }
-
+    execute(formData, () => {
       form.reset();
-      showToast({
-        type: "success",
-        title: "Category created",
-        message: result.message,
-      });
     });
   }
 

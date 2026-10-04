@@ -97,7 +97,7 @@ export function MonthSelector({ value }: { value: string }) {
   }, [isOpen]);
 
   return (
-    <div ref={wrapperRef} className="relative w-35">
+    <div ref={wrapperRef} className="relative w-30 sm:w-40">
       <div className="flex items-center justify-end">
         <button
           type="button"
