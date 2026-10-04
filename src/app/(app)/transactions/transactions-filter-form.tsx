@@ -103,43 +103,47 @@ function TransactionsFilterControls({
 
       <div className="mt-4 grid gap-2 lg:grid-cols-3">
         <div className="relative rounded-lg">
-          <Search className="w-4 h-4 absolute top-3 left-3 text-muted-foreground"/>
-        <input
-          value={searchValue}
-          onChange={(event) => setSearchValue(event.target.value)}
-          placeholder="Salary, lunch..."
-          className="w-full rounded-lg border border-border px-3 py-2 pl-8 text-sm outline-none focus:border-primary"
-        />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={searchValue}
+            onChange={(event) => setSearchValue(event.target.value)}
+            placeholder="Salary, lunch..."
+            className="w-full rounded-lg border border-border px-3 py-2 pl-8 text-md sm:text-sm outline-none focus:border-primary"
+          />
         </div>
 
-        <select
-          value={filters.type}
-          onChange={(event) =>
-            updateFilters({ type: event.target.value, categoryId: "" })
-          }
-          className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
-        >
-          <option value="">All types</option>
-          <option value="INCOME">Income</option>
-          <option value="EXPENSE">Expense</option>
-          <option value="TRANSFER">Transfer</option>
-        </select>
+        <div className="flex items-center gap-4">
 
-        <select
-          value={filters.categoryId}
-          onChange={(event) =>
-            updateFilters({ categoryId: event.target.value })
-          }
-          disabled={filters.type === "TRANSFER"}
-          className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary disabled:opacity-50"
-        >
-          <option value="">All categories</option>
-          {visibleCategories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name} ({category.type.toLowerCase()})
-            </option>
-          ))}
-        </select>
+          <select
+            value={filters.type}
+            onChange={(event) =>
+              updateFilters({ type: event.target.value, categoryId: "" })
+            }
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+          >
+            <option value="">All types</option>
+            <option value="INCOME">Income</option>
+            <option value="EXPENSE">Expense</option>
+            <option value="TRANSFER">Transfer</option>
+          </select>
+
+          <select
+            value={filters.categoryId}
+            onChange={(event) =>
+              updateFilters({ categoryId: event.target.value })
+            }
+            disabled={filters.type === "TRANSFER"}
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary disabled:opacity-50"
+          >
+            <option value="">All categories</option>
+            {visibleCategories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name} ({category.type.toLowerCase()})
+              </option>
+            ))}
+          </select>
+        </div>
+
       </div>
     </section>
   );

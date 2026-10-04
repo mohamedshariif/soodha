@@ -71,7 +71,6 @@ export function EditTransactionModal({
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
         title="Edit transaction"
-        description={`Update this ${isIncome ? "income" : "expense"} transaction.`}
         width="md"
         isDismissDisabled={isPending}
       >
@@ -83,10 +82,6 @@ export function EditTransactionModal({
               className={`mt-1 font-semibold ${isIncome ? "text-emerald-600" : "text-red-600"}`}
             >
               {transaction.type}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Type is locked. To change income to expense, delete this
-              transaction and create a new one.
             </p>
           </div>
 
@@ -133,7 +128,7 @@ export function EditTransactionModal({
               />
             </div>
 
-            <div className="md:col-span-2">
+            <div className="col-span-2">
               <textarea
                 name="note"
                 placeholder="Optional note"

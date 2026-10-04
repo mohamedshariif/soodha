@@ -19,7 +19,7 @@ export default async function AccountsPage() {
     throw new Error("You must be signed in.");
   }
 
-  const zero = BigInt(0);
+  const zero = 0n;
 
   const accounts = await prisma.account.findMany({
     where: {
