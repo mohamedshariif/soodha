@@ -33,6 +33,8 @@ export default async function DashboardPage({
     throw new Error("You must be signed in.");
   }
 
+  const fullName = appUser?.profile?.fullName ?? "there";
+
   const params = await searchParams;
   const selectedMonthValue = isMonthInputValue(params.month)
     ? params.month
@@ -42,7 +44,7 @@ export default async function DashboardPage({
   const todayInput = getTodayDateInputValue();
   const today = parseDateInputToTransactionDate(todayInput);
   const billAttentionEnd = addDaysUtc(today, 7);
-  const zero = BigInt(0);
+  const zero = 0n;
 
   const [
     accounts,
@@ -302,6 +304,7 @@ export default async function DashboardPage({
         expenseCategories={expenseCategories}
         accounts={accounts}
         today={todayInput}
+        fullName={fullName}
       />
 
       <DashboardActivity

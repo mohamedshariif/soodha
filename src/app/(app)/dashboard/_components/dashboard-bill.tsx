@@ -80,7 +80,7 @@ export function DashboardBill({
                     billId={bill.id}
                     billName={bill.name}
                     dueDate={formatDateForInput(bill.nextDueDate)}
-                    className="rounded-lg border border-border px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-primary hover:text-white cursor-pointer"
+                    className="rounded-lg bg-primary text-primary-foreground px-3 py-2 text-xs font-semibold transition hover:bg-primary/80 cursor-pointer"
                   />
                 </div>
               </div>

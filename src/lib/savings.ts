@@ -1,5 +1,5 @@
-const ZERO = BigInt(0);
-const ONE_HUNDRED = BigInt(100);
+const ZERO = 0n;
+const ONE_HUNDRED = 100n;
 
 export function computeSavingsTotals(
   goals: { targetAmountMinor: bigint; currentAmountMinor: bigint }[],

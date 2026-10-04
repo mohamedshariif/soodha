@@ -1,8 +1,9 @@
-import { ArrowDownRight, ArrowUpRight, WalletCards } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, WalletCards } from "lucide-react";
 import { AddExpenseModal } from "@/app/(app)/transactions/expenses/add-expense-modal";
 import { AddIncomeModal } from "@/app/(app)/transactions/income/add-income-modal";
 import { SummaryCard } from "@/components/ui/summary-card";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
+import { TimeGreeting } from "@/components/time-greeting";
 
 type CategoryOption = { id: string; name: string };
 type AccountOption = {
@@ -26,6 +27,7 @@ export function DashboardOverview({
   expenseCategories,
   accounts,
   today,
+  fullName,
 }: {
   currency: string;
   totalBalanceMinor: bigint;
@@ -39,13 +41,18 @@ export function DashboardOverview({
   expenseCategories: CategoryOption[];
   accounts: AccountOption[];
   today: string;
+  fullName: string;
 }) {
   const cashFlowMinor = incomeMinor - expenseMinor;
-  const zero = BigInt(0);
+  const zero = 0n;
 
   return (
     <>
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+    <TimeGreeting
+      name={fullName}
+      className="bg-linear-to-r from-emerald-600 via-teal-500 to-indigo-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(5,150,105,0.2)] sm:hidden"
+      />
+      <div className="mt-2 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <SummaryCard
           label="Total balance"
           value={formatMoneyFromMinorUnits(totalBalanceMinor, currency)}
@@ -54,7 +61,7 @@ export function DashboardOverview({
           valueClassName={
             totalBalanceMinor >= zero ? "text-white" : "text-red-600"
           }
-          className="bg-linear-to-br from-primary/60 via-primary/80 to-emerald-800"
+          className="bg-linear-to-br from-emerald-600 via-teal-700 to-indigo-900 shadow-lg shadow-emerald-900/20"
           labelClassName="text-white/80"
           iconClassName="bg-primary/40 text-white"
           helperClassName="text-white/80"
@@ -63,7 +70,7 @@ export function DashboardOverview({
           <SummaryCard
             label="Income"
             value={formatMoneyFromMinorUnits(incomeMinor, currency)}
-            helper={`${incomeCount} income record${incomeCount === 1 ? "" : "s"}`}
+            helper={`${incomeCount} record${incomeCount === 1 ? "" : "s"}`}
             icon={<ArrowUpRight className="h-5 w-5" />}
             valueClassName="text-emerald-600"
             iconClassName="bg-muted text-primary"
@@ -71,8 +78,8 @@ export function DashboardOverview({
           <SummaryCard
             label="Expenses"
             value={formatMoneyFromMinorUnits(expenseMinor, currency)}
-            helper={`${expenseCount} expense record${expenseCount === 1 ? "" : "s"}`}
-            icon={<ArrowDownRight className="h-5 w-5" />}
+            helper={`${expenseCount} record${expenseCount === 1 ? "" : "s"}`}
+            icon={<ArrowDownLeft className="h-5 w-5" />}
             valueClassName="text-red-600"
             iconClassName="bg-muted text-red-600"
           />
@@ -85,7 +92,7 @@ export function DashboardOverview({
             cashFlowMinor >= zero ? (
               <ArrowUpRight className="h-5 w-5" />
             ) : (
-              <ArrowDownRight className="h-5 w-5" />
+              <ArrowDownLeft className="h-5 w-5" />
             )
           }
           valueClassName={

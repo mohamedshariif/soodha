@@ -20,7 +20,7 @@ export default async function SettingsPage() {
   const appUser = await getCurrentAppUser();
   if (!appUser) throw new Error("You must be signed in.");
 
-  const zero = BigInt(0);
+  const zero = 0n;
 
   const [defaultAccount, transactionCount, activeCategoryCount] = await Promise.all([
     prisma.account.findFirst({
@@ -37,7 +37,7 @@ export default async function SettingsPage() {
     <div>
       <PageHeader title="Settings" description="Manage your profile, money preferences, and app setup." />
 
-      <div className="mt-3 grid gap-4 md:grid-cols-3">
+      <div className="mt-3 grid gap-2 sm:gap-4 md:grid-cols-3">
         <ProfileSettingsTile fullName={appUser.profile?.fullName ?? ""} email={appUser.email} />
 
         <SettingsCard
@@ -54,7 +54,7 @@ export default async function SettingsPage() {
         />
       </div>
 
-      <div className="mt-6 grid gap-4">
+      <div className="mt-6 grid gap-2">
         <AppearanceSettingstile />
         <SettingsCard
           icon={Globe2}
