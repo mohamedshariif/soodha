@@ -6,7 +6,7 @@ import { SettingsCard } from "./settings-card";
 import { Modal } from "@/components/ui/modal";
 import { ModalFormActions } from "@/components/ui/modal-form-actions";
 import { useToast } from "@/components/ui/toast-provider";
-import { updateProfileDisplayName } from "../actions";
+import { updateProfileDisplayName } from "../_actions/actions";
 
 export function ProfileSettingsTile({
   fullName,

@@ -1,11 +1,17 @@
 "use client";
 
-import { createCategory } from "./actions";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { useState } from "react";
+import { createCategory } from "../actions";
 import { CATEGORY_COLORS } from "@/lib/colors/category-colors";
 import { useServerAction } from "@/lib/use-server-action";
+import { Modal } from "@/components/ui/modal";
+import { ModalFormActions } from "@/components/ui/modal-form-actions";
+import { FloatingActionButton } from "@/components/ui/floating-action-button";
+import { AddButton } from "@/components/ui/add-button";
 
 export function CreateCategoryForm() {
+  const [isOpen, setIsOpen] = useState(false);
+
   const { execute, isPending } = useServerAction(createCategory, {
     successTitle: "Category created",
     errorTitle: "Category not created"
@@ -18,54 +24,61 @@ export function CreateCategoryForm() {
     const form = event.currentTarget;
 
     execute(formData, () => {
+      setIsOpen(false);
       form.reset();
     });
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="mt-6 rounded-xl border border-border bg-card p-5"
-    >
-      <h2 className="font-semibold text-foreground">Create category</h2>
+    <>
+    <div>
+      <FloatingActionButton>
+        <AddButton label="Add category" onClick={() => setIsOpen(true)}/>
+      </FloatingActionButton>
+    </div>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-3">
+    <Modal
+      isOpen={isOpen}
+      onClose={() => setIsOpen(false)}
+      title="Add category"
+      description="Manage your income and expenses categories"
+      width="md"
+      isDismissDisabled={isPending}
+    >
+
+      <form
+      onSubmit={handleSubmit}
+      className=" p-5"
+    >
+      <div className="grid gap-2">
         <div>
-          <label className="text-sm font-medium text-muted-foreground">
+          <label htmlFor="name" className="text-sm font-medium text-muted-foreground">
             Category name
           </label>
           <input
+            id="name"
             name="name"
             placeholder="e.g. Coffee"
             disabled={isPending}
-            className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground outline-none focus:border-primary disabled:opacity-50"
+            className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-md text-foreground outline-none focus:border-primary disabled:opacity-50"
             required
           />
         </div>
 
         <div>
-          <label className="text-sm font-medium text-muted-foreground">
+          <label htmlFor="type" className="text-sm font-medium text-muted-foreground">
             Type
           </label>
           <select
+            id="type"
             name="type"
             disabled={isPending}
-            className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary disabled:opacity-50"
+            className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-md text-foreground outline-none focus:border-primary disabled:opacity-50"
             defaultValue="EXPENSE"
           >
             <option value="EXPENSE">Expense</option>
             <option value="INCOME">Income</option>
           </select>
-        </div>
-
-        <div className="flex items-end">
-          <LoadingButton
-            isLoading={isPending}
-            loadingText="Adding..."
-            className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Add category
-          </LoadingButton>
         </div>
       </div>
 
@@ -92,6 +105,16 @@ export function CreateCategoryForm() {
           ))}
         </div>
       </div>
+
+      <ModalFormActions 
+        onCancel={() => setIsOpen(false)}
+        isPending={isPending}
+        submitLabel="Add category"
+        pendingLabel="Adding..."
+      />
     </form>
+
+    </Modal>
+    </>
   );
 }

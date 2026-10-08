@@ -3,7 +3,7 @@
 import { createElement, useState, useTransition } from "react";
 import { Pencil, Check, X } from "lucide-react";
 import { getCategoryIcon } from "@/lib/icons/category-icons";
-import { updateCategory, deleteCategory } from "./actions";
+import { updateCategory, deleteCategory } from "../actions";
 import { useToast } from "@/components/ui/toast-provider";
 import { DeleteActionButton } from "@/components/ui/delete-action-button";
 

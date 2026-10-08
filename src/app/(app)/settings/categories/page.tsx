@@ -1,7 +1,8 @@
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { prisma } from "@/lib/prisma";
-import { CreateCategoryForm } from "./create-category-form";
-import { CategoryRow } from "./category-row";
+import { CreateCategoryForm } from "./_components/create-category-form";
+import { CategoryRow } from "./_components/category-row";
+import { PageHeader } from "@/components/ui/page-header";
 
 export const dynamic = "force-dynamic";
 
@@ -22,12 +23,13 @@ export default async function CategoriesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-foreground">Categories</h1>
-      <p className="mt-2 text-muted-foreground">
-        Manage your income and expense categories.
-      </p>
+      <PageHeader
+        title="Category"
+        description="Manage your income and expenses categories"
+      >  
+        <CreateCategoryForm />
+      </PageHeader>
 
-      <CreateCategoryForm />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <CategoryListSection

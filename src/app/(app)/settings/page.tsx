@@ -1,11 +1,13 @@
 import { Globe2, LockKeyhole, Tags } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { SettingsCard } from "./_components/settings-card";
+import { ResetMonthCard } from "./_components/reset-month-card";
 import { ProfileSettingsTile } from "./_components/profile-settings-tile";
 import { CurrencySettingsTile } from "./_components/currency-settings-tile";
 import { AppearanceSettingstile } from "./_components/appearance-settings-tile";
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { prisma } from "@/lib/prisma";
+import { DeleteAccountCard } from "./_components/delete-account-card";
 
 export const dynamic = "force-dynamic";
 
@@ -34,11 +36,13 @@ export default async function SettingsPage() {
   const canChangeCurrency = transactionCount === 0 && (defaultAccount?.currentBalanceMinor ?? zero) === zero;
 
   return (
-    <div>
-      <PageHeader title="Settings" description="Manage your profile, money preferences, and app setup." />
-
-      <div className="mt-3 grid gap-2 sm:gap-4 md:grid-cols-3">
-        <ProfileSettingsTile fullName={appUser.profile?.fullName ?? ""} email={appUser.email} />
+    <>
+    <PageHeader 
+      title="Settings" 
+      description="Manage your profile, money preferences, and app setup." 
+    />
+    <section className="mt-3 grid gap-2 sm:gap-4 md:grid-cols-3">
+      <ProfileSettingsTile fullName={appUser.profile?.fullName ?? ""} email={appUser.email} />
 
         <SettingsCard
           icon={Tags}
@@ -52,10 +56,10 @@ export default async function SettingsPage() {
           canChangeCurrency={canChangeCurrency}
           currencyOptions={currencyOptions}
         />
-      </div>
+    </section>
 
-      <div className="mt-6 grid gap-2">
-        <AppearanceSettingstile />
+    <section className="mt-6 grid gap-2">
+      <AppearanceSettingstile />
         <SettingsCard
           icon={Globe2}
           title="Language"
@@ -67,7 +71,14 @@ export default async function SettingsPage() {
           title="Security"
           description="Sign-in, password, sessions, and account security are managed by Clerk."
         />
-      </div>
-    </div>
+    </section>
+
+    <section className="mt-6 space-y-4">
+      <h2 className="text-lg font-semibold text-danger">Danger zone</h2>
+      <ResetMonthCard />
+      <DeleteAccountCard email={appUser.email} />
+    </section>
+
+    </>
   );
 }

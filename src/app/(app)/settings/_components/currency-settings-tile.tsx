@@ -6,7 +6,7 @@ import { SettingsCard } from "./settings-card";
 import { Modal } from "@/components/ui/modal";
 import { ModalFormActions } from "@/components/ui/modal-form-actions";
 import { useToast } from "@/components/ui/toast-provider";
-import { updateDefaultCurrency } from "../actions";
+import { updateDefaultCurrency } from "../_actions/actions";
 
 type CurrencyOption = {
   value: string;
