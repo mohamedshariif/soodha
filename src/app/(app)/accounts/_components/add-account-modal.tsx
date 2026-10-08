@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createAccount } from "./actions";
+import { createAccount } from "../actions";
 import { MOBILE_MONEY_PROVIDERS } from "@/lib/mobile-money-providers";
 import { AddButton } from "@/components/ui/add-button";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
@@ -44,19 +44,20 @@ export function AddAccountModal() {
         isDismissDisabled={isPending}
       >
         <form onSubmit={handleSubmit} className="p-5">
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-2">
             <div>
-              <label className="text-xs font-medium text-muted-foreground">
+              <label htmlFor="type" className="text-xs font-medium text-muted-foreground">
                 ACCOUNT TYPE
               </label>
               <select
+                id="type"
                 name="type"
                 value={accountType}
                 onChange={(event) =>
                   setAccountType(event.target.value as AccountType)
                 }
                 disabled={isPending}
-                className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary disabled:opacity-50"
+                className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-md text-foreground outline-none focus:border-primary disabled:opacity-50"
               >
                 <option value="CASH">Cash</option>
                 <option value="BANK">Bank</option>
@@ -74,7 +75,7 @@ export function AddAccountModal() {
                   defaultValue=""
                   disabled={isPending}
                   required
-                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none focus:border-primary disabled:opacity-50"
+                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-md text-foreground outline-none focus:border-primary disabled:opacity-50"
                 >
                   <option value="" disabled>
                     Select provider
@@ -88,42 +89,45 @@ export function AddAccountModal() {
               </div>
             ) : (
               <div>
-                <label className="text-xs font-medium text-muted-foreground">
+                <label htmlFor="provider" className="text-xs font-medium text-muted-foreground">
                   PROVIDER
                 </label>
                 <input
+                  id="provider"
                   name="provider"
                   value={accountType === "CASH" ? "Cash" : "Bank"}
                   readOnly
                   tabIndex={-1}
-                  className="mt-1 w-full cursor-not-allowed rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground outline-none"
+                  className="mt-1 w-full cursor-not-allowed rounded-lg border border-border bg-muted px-3 py-2 text-md text-muted-foreground outline-none"
                 />
               </div>
             )}
 
             <div>
-              <label className="text-xs font-medium text-muted-foreground">
+              <label htmlFor="name" className="text-xs font-medium text-muted-foreground">
                 ACCOUNT NAME
               </label>
               <input
+                id="name"
                 name="name"
                 placeholder="e.g. My Cash, EVC Plus, Salaam Bank"
                 disabled={isPending}
-                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-md outline-none focus:border-primary"
                 required
               />
             </div>
 
             <div>
-              <label className="text-xs font-medium text-muted-foreground">
+              <label htmlFor="balance" className="text-xs font-medium text-muted-foreground">
                 PENINING BALANCE
               </label>
               <input
+                id="balance"
                 name="openingBalance"
                 type="number"
                 placeholder="0.00"
                 disabled={isPending}
-                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-md outline-none focus:border-primary"
               />
             </div>
           </div>

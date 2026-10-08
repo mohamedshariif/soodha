@@ -18,20 +18,18 @@ export default async function AppLayout({
 
   return (
     <ToastProvider>
-    <div className="h-screen overflow-hidden bg-background">
-      <div className="flex h-full">
+    <div className="flex h-dvh min-h-0 overflow-hidden overscroll-none bg-background">
         <AppSidebar />
 
-        <div className="flex h-full flex-1 flex-col overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <AppHeader fullName={fullName}/>
 
-          <main className="flex-1 overflow-y-auto p-4 pb-24 lg:p-6 lg:pb-6">
+          <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 pb-34 lg:p-6 lg:pb-20">
             {children}
           </main>
         </div>
 
         <AppBottomNav />
-      </div>
     </div>
     </ToastProvider>
   );

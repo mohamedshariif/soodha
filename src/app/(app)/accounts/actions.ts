@@ -184,7 +184,7 @@ export async function setDefaultAccount(
   }
 }
 
-export async function archiveAccount(
+export async function removeAccount(
   formData: FormData,
 ): Promise<ActionResult> {
   try {
@@ -213,12 +213,6 @@ export async function archiveAccount(
       throw new Error("Account not found.");
     }
 
-    if (account.isDefault) {
-      throw new Error(
-        "Set another account as default before archiving this one.",
-      );
-    }
-
     const transactionCount = await prisma.transaction.count({
       where: {
         userId: appUser.id,
@@ -226,14 +220,10 @@ export async function archiveAccount(
       },
     });
 
-    if (transactionCount > 0) {
-      await prisma.account.update({
+    if (transactionCount === 0) {
+      await prisma.account.delete({
         where: {
           id: account.id,
-        },
-        data: {
-          status: "ARCHIVED",
-          deletedAt: new Date(),
         },
       });
 
@@ -241,20 +231,32 @@ export async function archiveAccount(
       revalidatePath("/settings");
       revalidatePath("/dashboard");
 
-      return actionSuccess(
-        `"${account.name}" was archived since it has transaction history.`,
-      );
+      return actionSuccess(`"${account.name}" was deleted.`);
     }
 
-    await prisma.account.delete({
-      where: { id: account.id },
+    if (account.isDefault) {
+      throw new Error("Set another account as default before archiving this one.");
+    }
+
+    await prisma.account.update({
+      where: {
+        id: account.id,
+      },
+      data: {
+        status: "ARCHIVED",
+        deletedAt: null,
+        isDefault: false,
+      },
     });
 
     revalidatePath("/accounts");
     revalidatePath("/settings");
     revalidatePath("/dashboard");
 
-    return actionSuccess(`"${account.name}" was deleted.`);
+
+    return actionSuccess(
+      `"${account.name}" was archived because it has transaction history.`,
+    );
   } catch (error) {
     return actionError(error, "Could not remove account.");
   }

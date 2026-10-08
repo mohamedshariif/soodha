@@ -1,7 +1,7 @@
 import { Banknote, Landmark, Smartphone, Wallet } from "lucide-react";
-import { AddAccountModal } from "./add-account-modal";
-import { AccountCard } from "./account-card";
-import type { AccountType } from "./account-visuals";
+import { AddAccountModal } from "./_components/add-account-modal";
+import { AccountCard } from "./_components/account-card";
+import type { AccountType } from "./_components/account-visuals";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SummaryCard } from "@/components/ui/summary-card";
 import { getCurrentAppUser } from "@/lib/current-app-user";

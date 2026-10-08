@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown, Star } from "lucide-react";
-import { setDefaultAccount, archiveAccount } from "./actions";
+import { setDefaultAccount, removeAccount } from "../actions";
 import { DeleteActionButton } from "@/components/ui/delete-action-button";
 import { getAccountTypeMeta, type AccountType } from "./account-visuals";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
@@ -95,7 +95,7 @@ export function AccountCard({
                 )}
 
                 <DeleteActionButton
-                    action={archiveAccount}
+                    action={removeAccount}
                     actionData={{ accountId: account.id }}
                     itemName={account.name}
                     description="If this account has transaction history, it will be archived instead of permanently deleted."
