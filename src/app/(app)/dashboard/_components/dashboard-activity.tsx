@@ -1,6 +1,6 @@
 import { createElement } from "react";
 import Link from "next/link";
-import { ArrowDownLeft, ArrowUpRight, ArrowRightLeft } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, ArrowRightLeft, Receipt } from "lucide-react";
 import { DashboardIncomeExpenseChart } from "@/components/finance-charts";
 import { SectionCard } from "@/components/ui/section-card";
 import { formatDateForDisplay } from "@/lib/date";
@@ -56,9 +56,12 @@ export function DashboardActivity({
       >
         <div className="mt-4 divide-y divide-border-subtle">
           {recentTransactions.length === 0 ? (
-            <p className="py-6 text-sm text-muted-foreground">
+            <div className="mt-5 flex flex-col items-center gap-3 rounded-lg bg-muted/40 p-4">
+              <Receipt className="w-8 h-8 text-muted-foreground/70"/>
+              <p className="text-sm text-muted-foreground">
               No transactions yet.
             </p>
+            </div>
           ) : (
             recentTransactions.map((transaction) => {
               const isIncome = transaction.type === "INCOME";

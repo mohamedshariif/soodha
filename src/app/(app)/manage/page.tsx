@@ -65,7 +65,7 @@ export default function ManagePage() {
           <Link
             key={item.href}
             href={item.href}
-            className="group rounded-xl border border-border-subtle bg-card p-4 hover:border-border-strong hover:shadow-md hover:-translate-y-1 transition-all duration-200"
+            className="group rounded-xl border border-border-subtle bg-card p-4 hover:border-border-strong shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200"
           >
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3">

@@ -38,7 +38,7 @@ export function DashboardBill({
     >
       {bills.length === 0 ? (
         <div className="mt-4 flex flex-col items-center gap-3 rounded-lg bg-muted/60 p-4">
-          <CalendarClock className="h-5 w-5 text-muted-foreground" />
+          <CalendarClock className="h-8 w-8 text-muted-foreground/70" />
           <p className="text-sm text-muted-foreground">
             Nothing needs your attention right now.
           </p>

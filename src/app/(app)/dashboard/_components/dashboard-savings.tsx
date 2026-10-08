@@ -25,13 +25,13 @@ export function DashboardSavings({
           href="/savings"
           className="font-medium text-primary hover:text-primary-hover"
         >
-          View Savings
+          View
         </Link>
       }
     >
       {!hasGoals ? (
         <div className="mt-5 flex flex-col items-center gap-3 rounded-lg bg-muted/60 p-4">
-          <HandCoins className="h-5 w-5 text-muted-foreground" />
+          <HandCoins className="h-8 w-8 text-muted-foreground/70" />
           <p className="text-sm text-muted-foreground">No savings goals</p>
         </div>
       ) : (

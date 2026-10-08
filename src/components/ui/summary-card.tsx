@@ -23,7 +23,7 @@ export function SummaryCard({
 }) {
   return (
     <div
-      className={`group rounded-xl py-2.5 px-4 sm:p-5 transition-all hover:-translate-y-1 duration-300 ease-out shadow-md hover:shadow-md ${className || "bg-card"}`}
+      className={`group rounded-xl py-2.5 px-4 sm:p-5 transition-all hover:-translate-y-1 duration-300 ease-out shadow-sm hover:shadow-md ${className || "bg-card"}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div>

@@ -33,14 +33,14 @@ export function DashboardBudget({
           href={`/budgets?month=${monthValue}`}
           className="font-medium text-primary hover:text-primary-hover"
         >
-          View budgets
+          View
         </Link>
       }
     >
       {budgets.length === 0 ? (
         <div className="mt-5 flex flex-col items-center gap-3 rounded-lg bg-muted/40 p-4">
-          <PieChart className="w-5 h-5 text-muted-foreground"/>
-          <p className="mt-5 text-sm text-muted-foreground">
+          <PieChart className="w-8 h-8 text-muted-foreground/70"/>
+          <p className="text-sm text-muted-foreground">
             No budgets set for this month.
           </p>
         </div>
