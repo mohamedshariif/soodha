@@ -192,7 +192,7 @@ export async function recordDebtPayment(formData: FormData): Promise<ActionResul
   }
 }
 
-export async function archiveDebt(formData: FormData): Promise<ActionResult> {
+export async function removeDebt(formData: FormData): Promise<ActionResult> {
   try{
     const appUser = await getCurrentAppUser();
     if(!appUser) throw new Error("You must be signed in.");

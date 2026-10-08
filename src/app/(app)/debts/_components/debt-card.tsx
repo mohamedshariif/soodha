@@ -7,8 +7,8 @@ import {
   ChevronDown,
   CalendarDays,
 } from "lucide-react";
-import { archiveDebt } from "../actions";
-import { RecordDebtPaymentModal } from "../record-debt-payment-modal";
+import { removeDebt } from "../actions";
+import { RecordDebtPaymentModal } from "./record-debt-payment-modal";
 import { formatDateForDisplay } from "@/lib/date";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
 import type { DebtDirection } from "@/generated/prisma/enums";
@@ -95,7 +95,7 @@ export function DebtCard({ debt, today, canRecordPayment }: DebtCardProps) {
           </div>
 
           <DeleteActionButton
-            action={archiveDebt}
+            action={removeDebt}
             actionData={{ debtId: debt.id }}
             itemName={debt.name}
             description="If this debt has payment history, it will be archived instead of permanently deleted."

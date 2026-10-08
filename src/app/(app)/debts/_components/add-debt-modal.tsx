@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createDebt } from "./actions";
+import { createDebt } from "../actions";
 import type { DebtDirection } from "@/generated/prisma/enums";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { AddButton } from "@/components/ui/add-button";

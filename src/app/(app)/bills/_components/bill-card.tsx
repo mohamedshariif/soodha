@@ -9,7 +9,7 @@ import {
 } from "@/lib/bills";
 import { guessBillIcon } from "@/lib/icons/bill-icon-suggest";
 import { DeleteActionButton } from "@/components/ui/delete-action-button";
-import { archiveBill } from "../actions";
+import { removeBill } from "../actions";
 import { MarkBillPaidButton } from "./mark-bill-paid-button";
 
 export function BillCard({
@@ -67,7 +67,7 @@ export function BillCard({
           variant={dueSoon ? "due" : "early"}
         />
         <DeleteActionButton
-          action={archiveBill}
+          action={removeBill}
           actionData={{ billId: bill.id }}
           itemName={bill.name}
           description="If this bill has payment history, it will be archived instead of permanently deleted."

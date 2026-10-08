@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { recordDebtPayment } from "./actions";
+import { recordDebtPayment } from "../actions";
 import type { DebtDirection } from "@/generated/prisma/enums";
 import { Modal } from "@/components/ui/modal";
 import { ModalFormActions } from "@/components/ui/modal-form-actions";
@@ -74,8 +74,13 @@ export function RecordDebtPaymentModal({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="text-sm font-medium text-foreground">Amount</label>
+              <label
+                htmlFor="amount"
+                className="text-sm font-medium text-foreground">
+                Amount
+              </label>
               <input
+                id="amount"
                 name="amount"
                 placeholder="50.00"
                 className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-md text-foreground outline-none focus:border-primary"
@@ -84,10 +89,11 @@ export function RecordDebtPaymentModal({
             </div>
 
             <div>
-              <label className="text-sm font-medium text-foreground">
+              <label htmlFor="date" className="text-sm font-medium text-foreground">
                 {isPayable ? "Payment date" : "Date received"}
               </label>
               <input
+                id="date"
                 type="date"
                 name="paidAt"
                 defaultValue={today}
@@ -96,8 +102,9 @@ export function RecordDebtPaymentModal({
             </div>
 
             <div className="md:col-span-2">
-              <label className="text-sm font-medium text-foreground">Note</label>
+              <label htmlFor="note" className="text-sm font-medium text-foreground">Note</label>
               <input
+                id="note"
                 name="note"
                 placeholder="Optional note"
                 className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-md text-foreground outline-none focus:border-primary"

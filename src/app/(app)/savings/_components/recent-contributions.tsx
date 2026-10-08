@@ -1,6 +1,7 @@
 import { formatDateForDisplay } from "@/lib/date";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
 import { guessSavingsGoalIcon } from "@/lib/icons/savings-goal-icon-suggests";
+import { Coins } from "lucide-react";
 
 export function RecentContributions({
   contributions,
@@ -25,7 +26,8 @@ export function RecentContributions({
 
       <div className="mt-6 space-y-1 border-t border-border">
         {contributions.length === 0 ? (
-          <div className="rounded-lg bg-muted p-4 text-center">
+          <div className="flex flex-col items-center gap-2 rounded-lg border border-border border-dashed p-8 text-center">
+            <Coins className="w-8 h-8 text-muted-foreground/70"/>
             <p className="text-sm text-muted-foreground">
               No savings contributions yet.
             </p>

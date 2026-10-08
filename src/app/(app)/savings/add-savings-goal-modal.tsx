@@ -52,7 +52,7 @@ export function AddSavingsGoalModal() {
                 id="name"
                 name="name"
                 placeholder="e.g. Emergency"
-                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-md outline-none focus:border-primary"
                 required
               />
             </div>
@@ -65,7 +65,7 @@ export function AddSavingsGoalModal() {
                 id="amount"
                 name="targetAmount"
                 placeholder="$200.00"
-                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-md outline-none focus:border-primary"
                 required
               />
             </div>
@@ -78,7 +78,7 @@ export function AddSavingsGoalModal() {
                 id="deadline"
                 type="date"
                 name="deadline"
-                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-md outline-none focus:border-primary"
               />
             </div>
 
@@ -90,7 +90,7 @@ export function AddSavingsGoalModal() {
                 id="note"
                 name="note"
                 placeholder="Optional note"
-                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-md outline-none focus:border-primary"
               />
             </div>
           </div>
@@ -100,7 +100,6 @@ export function AddSavingsGoalModal() {
             isPending={isPending}
             submitLabel="Save goal"
             pendingLabel="Saving..."
-            submitClassName="bg-emerald-600 text-white hover:bg-emerald-700"
           />
         </form>
       </Modal>

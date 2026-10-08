@@ -1,5 +1,5 @@
 import { Receipt, CheckCircle2, AlertTriangle } from "lucide-react";
-import { AddBillModal } from "./add-bill-modal";
+import { AddBillModal } from "./_components/add-bill-modal";
 import {
   getTodayDateInputValue,
   getCurrentMonthInputValue,
@@ -9,7 +9,7 @@ import {
 import { getCurrentAppUser } from "@/lib/current-app-user";
 import { formatMoneyFromMinorUnits } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
-import { groupBillsByStatus, sumAmountsMinor } from "@/lib/bills";
+import { groupBillsByStatus, sumAmountsMinor } from "@/lib/bills"
 import { PageHeader } from "@/components/ui/page-header";
 import { SummaryCard } from "@/components/ui/summary-card";
 import { BillTabs } from "./_components/bill-tabs";

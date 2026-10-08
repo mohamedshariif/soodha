@@ -1,3 +1,4 @@
+import { PieChart } from "lucide-react";
 import { BudgetCard } from "./budget-card";
 
 export function BudgetList({
@@ -21,9 +22,12 @@ export function BudgetList({
       </div>
 
       {rows.length === 0 ? (
-        <p className="mt-4 text-sm text-muted-foreground">
-          No budgets yet for this month.
-        </p>
+        <div className=" mt-2 flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+          <PieChart className="h-8 w-8 text-muted-foreground/70"/>
+          <p className="mt-4 text-sm text-muted-foreground">
+            No budgets yet for this month.
+          </p>
+        </div>
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
           {rows.map(({ budget, spentMinor, transactions }) => (

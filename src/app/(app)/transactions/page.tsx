@@ -1,6 +1,6 @@
 import { AddExpenseModal } from "@/app/(app)/transactions/expenses/add-expense-modal";
 import { AddIncomeModal } from "@/app/(app)/transactions/income/add-income-modal";
-import { TransactionsFilterForm } from "./transactions-filter-form";
+import { TransactionsFilterForm } from "./_components/transactions-filter-form";
 import { TransactionRow } from "./_components/transaction-row";
 import { PaginationControls } from "./_components/pagination-controls";
 import { getTodayDateInputValue } from "@/lib/date";
@@ -108,10 +108,10 @@ export default async function TransactionsPage({
     selectedType === "TRANSFER"
       ? ""
       : categories.some(
-            (category) => 
-              category.id === selectedCategoryId && 
-              (!selectedType || category.type === selectedType),
-          )
+        (category) =>
+          category.id === selectedCategoryId &&
+          (!selectedType || category.type === selectedType),
+      )
         ? selectedCategoryId
         : "";
 
@@ -123,21 +123,21 @@ export default async function TransactionsPage({
     ...(validCategoryId ? { categoryId: validCategoryId } : {}),
     ...(search
       ? {
-          OR: [
-            {
-              description: {
-                contains: search,
-                mode: "insensitive" as const,
-              },
+        OR: [
+          {
+            description: {
+              contains: search,
+              mode: "insensitive" as const,
             },
-            {
-              note: {
-                contains: search,
-                mode: "insensitive" as const,
-              },
+          },
+          {
+            note: {
+              contains: search,
+              mode: "insensitive" as const,
             },
-          ],
-        }
+          },
+        ],
+      }
       : {}),
   };
 

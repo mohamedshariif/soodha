@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/ui/page-header";
-import { AddBudgetModal } from "./add-budget-modal";
+import { AddBudgetModal } from "./_components/add-budget-modal";
 import { BudgetSummaryCards } from "./_components/budget-summary-cards";
 import { BudgetList } from "./_components/budget-list";
 import { formatMonthLabel, parseMonthInputToBudgetPeriod } from "@/lib/date";

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AddButton } from "@/components/ui/add-button";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { ALERT_THRESHOLD_PRESETS } from "@/lib/budgets";
-import { createOrUpdateBudget } from "./actions";
+import { createOrUpdateBudget } from "../actions";
 import { Modal } from "@/components/ui/modal";
 import { ModalFormActions } from "@/components/ui/modal-form-actions";
 import { useServerAction } from "@/lib/use-server-action";
@@ -67,7 +67,7 @@ export function AddBudgetModal({
                 type="month"
                 name="month"
                 defaultValue={currentMonth}
-                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-md outline-none focus:border-primary"
                 required
               />
             </div>
@@ -79,7 +79,7 @@ export function AddBudgetModal({
               <select
                 id="category"
                 name="categoryId"
-                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-md outline-none focus:border-primary"
                 required
               >
                 <option value="">Select category</option>
@@ -99,7 +99,7 @@ export function AddBudgetModal({
                 id="amount"
                 name="amount"
                 placeholder="300.00"
-                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-md outline-none focus:border-primary"
                 required
               />
             </div>

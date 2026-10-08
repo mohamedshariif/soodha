@@ -135,6 +135,7 @@ export function AddExpenseModal({
                 name="accountId"
                 defaultValue={defaultAccount?.id ?? accounts[0]?.id}
                 className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-md outline-none focus:border-primary"
+                required
               >
                 <option value="" disabled>
                   Select account

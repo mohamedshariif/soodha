@@ -14,66 +14,10 @@ import {
   actionSuccess,
   type ActionResult,
 } from "@/lib/action-result";
-
-type RepeatType = "NONE" | "WEEKLY" | "MONTHLY" | "YEARLY";
-
-function isRepeatType(value: FormDataEntryValue | null): value is RepeatType {
-  return (
-    value === "NONE" ||
-    value === "WEEKLY" ||
-    value === "MONTHLY" ||
-    value === "YEARLY"
-  );
-}
-
-function addDaysUtc(date: Date, days: number) {
-  return new Date(
-    Date.UTC(
-      date.getUTCFullYear(),
-      date.getUTCMonth(),
-      date.getUTCDate() + days,
-      12,
-      0,
-      0,
-      0,
-    ),
-  );
-}
-
-function addMonthsUtc(date: Date, months: number) {
-  const year = date.getUTCFullYear();
-  const month = date.getUTCMonth();
-  const day = date.getUTCDate();
-
-  const lastDayOfTargetMonth = new Date(
-    Date.UTC(year, month + months + 1, 0, 12, 0, 0, 0),
-  ).getUTCDate();
-
-  return new Date(
-    Date.UTC(
-      year,
-      month + months,
-      Math.min(day, lastDayOfTargetMonth),
-      12,
-      0,
-      0,
-      0,
-    ),
-  );
-}
-
-function getNextDueDate(currentDueDate: Date, repeatType: RepeatType) {
-  switch (repeatType) {
-    case "WEEKLY":
-      return addDaysUtc(currentDueDate, 7);
-    case "MONTHLY":
-      return addMonthsUtc(currentDueDate, 1);
-    case "YEARLY":
-      return addMonthsUtc(currentDueDate, 12);
-    default:
-      return null;
-  }
-}
+import { 
+  getNextDueDate,
+  isRepeatType,
+} from "@/lib/bills";
 
 export async function createBill(formData: FormData): Promise<ActionResult> {
   try {
@@ -228,7 +172,7 @@ export async function markBillAsPaid(
 
       const nextDueDate = getNextDueDate(
         bill.nextDueDate,
-        bill.repeatType as RepeatType,
+        bill.repeatType,
       );
 
       if (nextDueDate) {
@@ -255,7 +199,7 @@ export async function markBillAsPaid(
   }
 }
 
-export async function archiveBill(formData: FormData): Promise<ActionResult> {
+export async function removeBill(formData: FormData): Promise<ActionResult> {
   try {
     const appUser = await getCurrentAppUser();
 

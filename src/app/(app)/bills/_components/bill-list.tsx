@@ -16,7 +16,7 @@ export function BillList({
     <section>
 
       {bills.length === 0 ? (
-        <div className=" flex flex-col items-center gap-2 mt-4 rounded-lg bg-muted p-4">
+        <div className=" flex flex-col items-center gap-2 mt-4 rounded-lg border border-border border-dashed p-8">
           <span>{emptyIcon}</span>
           <p className="text-sm text-muted-foreground">{emptyText}</p>
         </div>

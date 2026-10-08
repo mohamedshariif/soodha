@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { AddButton } from "@/components/ui/add-button";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
-import { createBill } from "./actions";
+import { createBill } from "../actions";
 import { Modal } from "@/components/ui/modal";
 import { ModalFormActions } from "@/components/ui/modal-form-actions";
 import { useServerAction } from "@/lib/use-server-action";
@@ -60,7 +60,7 @@ export function AddBillModal({
                 id="name"
                 name="name"
                 placeholder="e.g. Internet"
-                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-md outline-none focus:border-primary"
                 required
               />
             </div>
@@ -73,7 +73,7 @@ export function AddBillModal({
                 id="amount"
                 name="amount"
                 placeholder="30.00"
-                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-md outline-none focus:border-primary"
                 required
               />
             </div>
@@ -85,7 +85,7 @@ export function AddBillModal({
               <select
                 id="category"
                 name="categoryId"
-                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-md outline-none focus:border-primary"
                 required
               >
                 <option value="">Select category</option>
@@ -106,7 +106,7 @@ export function AddBillModal({
                 type="date"
                 name="nextDueDate"
                 defaultValue={today}
-                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-md outline-none focus:border-primary"
                 required
               />
             </div>
@@ -119,7 +119,7 @@ export function AddBillModal({
                 id="repeat"
                 name="repeatType"
                 defaultValue="MONTHLY"
-                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+                className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-md outline-none focus:border-primary"
               >
                 <option value="NONE">Does not repeat</option>
                 <option value="WEEKLY">Weekly</option>

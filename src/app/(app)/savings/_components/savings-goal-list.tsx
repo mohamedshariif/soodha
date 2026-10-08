@@ -18,7 +18,7 @@ export function SavingsGoalList({
     <section className="mt-3">
       <div className="mt-2 grid grid-cols-1 gap-3 md:grid-cols-2">
         {goals.length === 0 ? (
-          <div className="flex flex-col items-center rounded-lg bg-muted p-4">
+          <div className="flex flex-col items-center rounded-lg border border-border border-dashed p-8">
             <span>{emptyIcon}</span>
             <p className="mt-1 text-sm text-muted-foreground">{emptyText}</p>
           </div>

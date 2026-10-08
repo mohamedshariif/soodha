@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { SummaryCard } from "@/components/ui/summary-card";
 import { DebtsBoard } from "./_components/debts-board";
 import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
-import { AddDebtModal } from "./add-debt-modal";
+import { AddDebtModal } from "./_components/add-debt-modal";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +50,7 @@ export default async function DebtsPage() {
     <div>
       <PageHeader
         title="Debts"
-         description="Create savings goals and track contribuation over time"
+         description="Create savings goals and track contribution over time"
       >
         <AddDebtModal />
       </PageHeader>

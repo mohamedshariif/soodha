@@ -18,7 +18,7 @@ export function PaidBillsList({
   return (
     <section>
       {payments.length === 0 ? (
-        <div className="mt-4 rounded-lg bg-muted p-4">
+        <div className="mt-4 rounded-lg border border-border border-dashed p-8">
           <div className="flex flex-col items-center gap-2">
             <Clock className="w-6 h-6 text-muted-foreground"/>
             <p className="text-sm text-muted-foreground">

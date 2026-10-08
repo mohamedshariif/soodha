@@ -1,6 +1,18 @@
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 export const ATTENTION_WINDOW_DAYS = 7;
 
+export type RepeatType =
+  "NONE" | "WEEKLY" | "MONTHLY" | "YEARLY";
+
+export function isRepeatType(value: FormDataEntryValue | null): value is RepeatType {
+  return (
+    value === "NONE" ||
+    value === "WEEKLY" ||
+    value === "MONTHLY" ||
+    value === "YEARLY"
+  );
+}
+
 export function getDaysUntilDue(dueDate: Date, today: Date) {
   return Math.round((dueDate.getTime() - today.getTime()) / MS_PER_DAY);
 }
@@ -57,5 +69,54 @@ export function formatRepeatLabel(repeatType: string) {
       return "Yearly";
     default:
       return "One-time";
+  }
+}
+
+export function addDaysUtc(date: Date, days: number) {
+  return new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate() + days,
+      12,
+      0,
+      0,
+      0,
+    ),
+  );
+}
+
+export function addMonthsUtc(date: Date, months: number) {
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth();
+  const day = date.getUTCDate();
+
+  const lastDayOfTargetMonth = new Date(
+    Date.UTC(year, month + months + 1, 0, 12, 0, 0, 0),
+  ).getUTCDate();
+
+  return new Date(
+    Date.UTC(
+      year,
+      month + months,
+      Math.min(day, lastDayOfTargetMonth),
+      12,
+      0,
+      0,
+      0,
+    ),
+  );
+}
+
+export function getNextDueDate(currentDueDate: Date, repeatType: RepeatType) {
+  switch (repeatType) {
+    case "WEEKLY":
+      return addDaysUtc(currentDueDate, 7);
+    case "MONTHLY":
+      return addMonthsUtc(currentDueDate, 1);
+    case "YEARLY":
+      return addMonthsUtc(currentDueDate, 12);
+    default:
+      return null;
   }
 }

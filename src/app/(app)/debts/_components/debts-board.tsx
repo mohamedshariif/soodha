@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { FolderOpen, Inbox, Search } from "lucide-react";
 import { DebtCard } from "./debt-card";
 import type { DebtDirection } from "@/generated/prisma/enums";
 
@@ -15,7 +15,7 @@ type DebtRecord = {
   currency: string;
   dueDate: Date | null;
   minimumPaymentMinor: bigint | null;
-    note: string | null;
+  note: string | null;
   status: string;
   payments: { id: string; amountMinor: bigint; currency: string; paidAt: Date }[];
 };
@@ -61,36 +61,43 @@ export function DebtsBoard({ debts, today }: { debts: DebtRecord[]; today: strin
             <button
               key={option.key}
               onClick={() => setFilter(option.key)}
-              className={`rounded-full border px-3 py-2 text-sm font-semibold transition-colors ${
-                filter === option.key
+              className={`rounded-full border px-3 py-2 text-sm font-semibold transition-colors ${filter === option.key
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-card text-muted-foreground hover:text-foreground"
-              }`}
+                }`}
             >
               {option.label}
             </button>
           ))}
         </div>
 
-      <div className="relative mt-2 sm:mt-0 w-full sm:w-80">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          type="text"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by name or lender..."
-          className="w-full rounded-lg border border-border bg-card py-2.5 pl-9 pr-3 text-md text-foreground outline-none focus:border-primary"
-        />
-      </div>
+        <div className="relative mt-2 sm:mt-0 w-full sm:w-80">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="text"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search by name or lender..."
+            className="w-full rounded-lg border border-border bg-card py-2.5 pl-9 pr-3 text-md text-foreground outline-none focus:border-primary"
+          />
+        </div>
 
       </div>
 
       <div className="mt-4 pb-10 grid gap-2 sm:grid-cols-2 sm:gap-4">
         {filteredDebts.length === 0 ? (
-          <div className="rounded-lg border border-border bg-muted p-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              {query.trim() ? "No debts match your search." : "Nothing here yet."}
-            </p>
+          <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+            {query.trim() ? (
+              <>
+                <Inbox className="h-8 w-8 text-muted-foreground/70" />
+                <p>No debts match your search.</p>
+              </>
+            ) : (
+              <>
+                <FolderOpen className="h-8 w-8 text-muted-foreground/70" />
+                <p>No debts recorded yet.</p>
+              </>
+            )}
           </div>
         ) : (
           filteredDebts.map((debt) => (
